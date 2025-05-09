@@ -36,24 +36,26 @@ export default function Home() {
   const themes = Array.from(new Set(books.map((b) => b.Tema).filter(Boolean)));
 
   const filteredBooks = books.filter((book) => {
-    const search = searchTerm.toLowerCase();
+  const search = searchTerm.toLowerCase();
 
-    const matchesSearch =
-      String(book.Código || '').toLowerCase().includes(search) ||
-      String(book.Título || '').toLowerCase().includes(search) ||
-      String(book.Autor || '').toLowerCase().includes(search) ||
-      String(book['Categoria do livro'] || '').toLowerCase().includes(search) ||
-      String(book.Tema || '').toLowerCase().includes(search);
+  const matchesSearch =
+    String(book.Código || '').toLowerCase().includes(search) ||
+    String(book.Título || '').toLowerCase().includes(search) ||
+    String(book.Autor || '').toLowerCase().includes(search) ||
+    String(book['Categoria do livro'] || '').toLowerCase().includes(search) ||
+    String(book.Tema || '').toLowerCase().includes(search);
 
-    const matchesAvailable = onlyAvailable ? book['Emprestado?'] === 'FALSE' : true;
+  const isAvailable = String(book['Emprestado?'] || '').trim().toUpperCase() === 'FALSE';
+  const matchesAvailable = onlyAvailable ? isAvailable : true;
 
-    const matchesCategory =
-      selectedCategory === 'Todos' || book['Categoria do livro'] === selectedCategory;
+  const matchesCategory =
+    selectedCategory === 'Todos' || book['Categoria do livro'] === selectedCategory;
 
-    const matchesTheme = selectedTheme === 'Todos' || book.Tema === selectedTheme;
+  const matchesTheme = selectedTheme === 'Todos' || book.Tema === selectedTheme;
 
-    return matchesSearch && matchesAvailable && matchesCategory && matchesTheme;
-  });
+  return matchesSearch && matchesAvailable && matchesCategory && matchesTheme;
+});
+
 
   // Pagination logic
   const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
