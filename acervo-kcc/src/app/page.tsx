@@ -1,163 +1,212 @@
+// src/app/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
+import { fetchBooksCSV } from '@/lib/fetchBooks';
+import { getKdcThemes, KdcTheme } from '@/lib/getKdcThemes';
+import { getKdcCategories } from "@/utils/kdcUtils"; // ✅ new import
+import { Book } from '@/types/book';
 
-type Book = {
-  Código: string;
-  Posição: string;
-  Título: string;
-  Autor: string;
-  'Número chamada': string;
-  'Categoria do livro': string;
-  Tema: string;
-  'Data de registro': string;
-  'Emprestado?': string;
-  'Data prevista de retorno': string;
-  'Recomendação nível Sejong': string;
-};
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR6HZnIZOlxHsFULlxKJ77c7tWwX07Voz5fqaVuTppaKSHUzDyIfnMRCshIULtOdIDs4GQEh2l2Ujv_/pub?gid=1081274334&single=true&output=csv';
+const BOOKS_PER_PAGE = 20;
 
-export default function Home() {
+function extractKdcCode(bookCode: string): string | null {
+  const match = bookCode.match(/(\d{3})/);
+  return match ? match[1] : null;
+}
+
+export default function HomePage() {
   const [books, setBooks] = useState<Book[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [onlyAvailable, setOnlyAvailable] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
-  const [selectedTheme, setSelectedTheme] = useState<string>('Todos');
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const booksPerPage = 10;
+  const [searchTerm, setSearchTerm] = useState('');
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [themes, setThemes] = useState<KdcTheme[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [mainCategory, setMainCategory] = useState("");
+  const [subCategory, setSubCategory] = useState("");
+
+  const { mainCategories, subcategories } = getKdcCategories();
+
 
   useEffect(() => {
-    fetch('/books.json')
-      .then((res) => res.json())
-      .then((data) => setBooks(data));
+    const loadBooks = async () => {
+      try {
+        const data = await fetchBooksCSV<Book>(CSV_URL);
+        setBooks(data);
+        setThemes(getKdcThemes());
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadBooks();
   }, []);
 
-  // Get unique categories + themes
-  const categories = Array.from(new Set(books.map((b) => b['Categoria do livro']).filter(Boolean)));
-  const themes = Array.from(new Set(books.map((b) => b.Tema).filter(Boolean)));
+  const matchesCategory = (bookCode: string) => {
+  const digitsMatch = bookCode.match(/\d{3}/);
+  if (!digitsMatch) return false;
+  const code = digitsMatch[0];
+
+  if (subCategory) return code === subCategory;
+  if (mainCategory) return code.startsWith(mainCategory[0]); // e.g., "1" for "100" matches "101", "102"...
+  
+  return true;
+};
 
   const filteredBooks = books.filter((book) => {
-  const search = searchTerm.toLowerCase();
+  const searchMatch = [book['Título'], book['Autor'], book['Código']]
+    .join(' ')
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase());
 
-  const matchesSearch =
-    String(book.Código || '').toLowerCase().includes(search) ||
-    String(book.Título || '').toLowerCase().includes(search) ||
-    String(book.Autor || '').toLowerCase().includes(search) ||
-    String(book['Categoria do livro'] || '').toLowerCase().includes(search) ||
-    String(book.Tema || '').toLowerCase().includes(search);
+  const availableMatch = !onlyAvailable || book['Emprestado?'] !== 'TRUE';
 
-  const isAvailable = String(book['Emprestado?'] || '').trim().toUpperCase() === 'FALSE';
-  const matchesAvailable = onlyAvailable ? isAvailable : true;
+  const categoryMatch = matchesCategory(book['Código'] || '');
 
-  const matchesCategory =
-    selectedCategory === 'Todos' || book['Categoria do livro'] === selectedCategory;
-
-  const matchesTheme = selectedTheme === 'Todos' || book.Tema === selectedTheme;
-
-  return matchesSearch && matchesAvailable && matchesCategory && matchesTheme;
+  return searchMatch && availableMatch && categoryMatch;
 });
 
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
-  const startIndex = (currentPage - 1) * booksPerPage;
-  const paginatedBooks = filteredBooks.slice(startIndex, startIndex + booksPerPage);
+  const totalPages = Math.ceil(filteredBooks.length / BOOKS_PER_PAGE);
+  const paginatedBooks = filteredBooks.slice(
+    (currentPage - 1) * BOOKS_PER_PAGE,
+    currentPage * BOOKS_PER_PAGE
+  );
 
-  const handlePrevious = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
-
-  const handleNext = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
     setCurrentPage(1);
-  }, [searchTerm, onlyAvailable, selectedCategory, selectedTheme]);
+  };
+
+  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedTheme(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleAvailabilityToggle = () => {
+    setOnlyAvailable((prev) => !prev);
+    setCurrentPage(1);
+  };
+
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
-    <main className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Acervo KCC - Biblioteca</h1>
+    <main className="p-6">
+      <h1 className="text-2xl font-bold mb-4">📚 Biblioteca KCC</h1>
 
-      <input
-        type="text"
-        placeholder="Buscar por título, autor, código..."
-        className="w-full p-2 mb-4 border rounded"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+      {/* Filters */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={handleSearch}
+          placeholder="🔍 Buscar por título, autor ou código..."
+          className="p-2 border rounded-md shadow-sm"
+        />
 
-      <div className="flex flex-wrap gap-4 mb-4">
-        <label className="flex items-center gap-2">
+        {/* Main Category Dropdown */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium">Tema Principal</label>
+          <select
+            className="w-full border p-2 rounded"
+            value={mainCategory}
+            onChange={(e) => {
+              setMainCategory(e.target.value);
+              setSubCategory(""); // reset subcategory
+            }}
+          >
+            <option value="">Todos os temas</option>
+            {mainCategories.map((cat) => (
+              <option key={cat.code} value={cat.code}>
+                {cat.code} - {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Subcategory Dropdown */}
+        <div className="mb-4">
+  <label className="block text-sm font-medium">Subtema</label>
+  <select
+    className="w-full border p-2 rounded bg-gray-100 disabled:opacity-50"
+    value={subCategory}
+    onChange={(e) => setSubCategory(e.target.value)}
+    disabled={!mainCategory}
+  >
+    <option value="">Todos os subtemas</option>
+    {mainCategory &&
+      subcategories.get(mainCategory)?.map((sub) => (
+        <option key={sub.code} value={sub.code}>
+          {sub.code} - {sub.label}
+        </option>
+      ))}
+  </select>
+</div>
+
+
+        <label className="inline-flex items-center space-x-2">
           <input
             type="checkbox"
             checked={onlyAvailable}
-            onChange={(e) => setOnlyAvailable(e.target.checked)}
+            onChange={handleAvailabilityToggle}
           />
-          Mostrar apenas disponíveis
+          <span>Mostrar apenas disponíveis</span>
         </label>
-
-        <select
-          className="p-2 border rounded"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-        >
-          <option value="Todos">Todas as categorias</option>
-          {categories.map((cat, idx) => (
-            <option key={idx} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className="p-2 border rounded"
-          value={selectedTheme}
-          onChange={(e) => setSelectedTheme(e.target.value)}
-        >
-          <option value="Todos">Todos os temas</option>
-          {themes.map((theme, idx) => (
-            <option key={idx} value={theme}>
-              {theme}
-            </option>
-          ))}
-        </select>
       </div>
 
-      <p className="mb-2 text-sm text-gray-700">
-        {filteredBooks.length} livro(s) encontrado(s) - Página {currentPage} de {totalPages}
-      </p>
+      {/* Book cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {paginatedBooks.map((book, index) => {
+          const kdcCode = extractKdcCode(book['Código'] || '');
+          const themeName =
+            themes.find((t) => t.code === kdcCode)?.name ?? 'Tema desconhecido';
 
-      <ul className="space-y-2 mb-4">
-        {paginatedBooks.map((book, index) => (
-          <li key={index} className="p-2 bg-gray-100 rounded">
-            <p><strong>Código:</strong> {book.Código}</p>
-            <p><strong>Título:</strong> {book.Título}</p>
-            <p><strong>Autor:</strong> {book.Autor}</p>
-            <p><strong>Categoria:</strong> {book['Categoria do livro']}</p>
-            <p><strong>Tema:</strong> {book.Tema}</p>
-            <p><strong>Disponível:</strong> {book['Emprestado?'] === 'FALSE' ? 'Sim' : 'Não'}</p>
-          </li>
-        ))}
-        {paginatedBooks.length === 0 && (
-          <p className="text-gray-500">Nenhum livro encontrado.</p>
-        )}
-      </ul>
+          return (
+            <div
+              key={index}
+              className={`border p-4 rounded-xl shadow-md ${
+                book['Emprestado?'] === 'TRUE'
+                  ? 'bg-red-100'
+                  : 'bg-green-100'
+              }`}
+            >
+              <h2 className="text-xl font-semibold">{book['Título']}</h2>
+              <p className="text-sm text-gray-700">{book['Autor']}</p>
+              <p className="text-sm">📌 Local: {book['Posição']}</p>
+              <p className="text-sm">🔖 Código: {book['Código']}</p>
+              <p className="text-sm">🧠 Tema: {themeName}</p>
+              <p className="text-sm">
+                {book['Emprestado?'] === 'TRUE'
+                  ? `⏳ Devolução: ${book['Data prevista de retorno']}`
+                  : '✅ Disponível'}
+              </p>
+            </div>
+          );
+        })}
+      </div>
 
-      <div className="flex gap-4">
+      {/* Pagination */}
+      <div className="flex justify-between items-center mt-6">
         <button
-          onClick={handlePrevious}
+          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           disabled={currentPage === 1}
-          className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400"
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
         >
-          Anterior
+          ← Anterior
         </button>
+        <span className="text-sm text-gray-700">
+          Página {currentPage} de {totalPages}
+        </span>
         <button
-          onClick={handleNext}
-          disabled={currentPage === totalPages || totalPages === 0}
-          className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400"
+          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
         >
-          Próximo
+          Próxima →
         </button>
       </div>
     </main>
