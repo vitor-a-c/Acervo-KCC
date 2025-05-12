@@ -39,7 +39,7 @@ export default function HomePage() {
   useEffect(() => {
     const loadBooks = async () => {
       try {
-        const data = await fetchBooksFromSheet(SHEET_ID, SHEET_NAME);
+        const data = await fetchBooksFromSheet();
         setBooks(data);
         setThemes(getKdcThemes());
       } catch (err: unknown) {
