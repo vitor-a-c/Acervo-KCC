@@ -1,5 +1,4 @@
 // src/lib/fetchBooksFromSheet.ts
-import { Book } from '@/types/book';
 
 export async function fetchBooksFromSheet() {
   const SHEET_ID = '1DDPFzfLvP-N3DZJrQYOrelHYOkuOp6l_FejuObvKdJM';

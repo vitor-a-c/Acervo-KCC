@@ -7,8 +7,6 @@ import { getKdcThemes, KdcTheme } from '@/lib/getKdcThemes';
 import { getKdcCategories } from "@/utils/kdcUtils"; // ✅ new import
 import { Book } from '@/types/book';
 
-const SHEET_ID = 'https://docs.google.com/spreadsheets/d/1DDPFzfLvP-N3DZJrQYOrelHYOkuOp6l_FejuObvKdJM/edit?usp=sharing';
-const SHEET_NAME = 'Acervo / 도서 목록'; // Make sure this matches the tab name exactly
 const BOOKS_PER_PAGE = 20;
 
 function extractKdcCode(bookCode: string): string | null {
