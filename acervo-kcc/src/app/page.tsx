@@ -91,11 +91,6 @@ export default function HomePage() {
     setCurrentPage(1);
   };
 
-  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTheme(e.target.value);
-    setCurrentPage(1);
-  };
-
   const handleAvailabilityToggle = () => {
     setOnlyAvailable((prev) => !prev);
     setCurrentPage(1);
