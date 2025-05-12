@@ -15,6 +15,12 @@ function extractKdcCode(bookCode: string): string | null {
   return match ? match[1] : null;
 }
 
+const validRecommendations = [
+  '1A+', '1B+', '2A+', '2B+', '3A+', '3B+',
+  '4A+', '4B+', '5A+', '5B+',
+  'Português', 'Inglês (English)', 'Espanhol (Español)'
+];
+
 export default function HomePage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -181,18 +187,27 @@ export default function HomePage() {
               book['Emprestado?'] === 'TRUE' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
             }`}
           >
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-start">
               <h2 className="text-lg font-semibold text-gray-800">{book['Título']}</h2>
-              <span
-                className={`text-xs font-medium px-2 py-1 rounded-full ${
-                  book['Emprestado?'] === 'TRUE'
-                    ? 'bg-red-200 text-red-800'
-                    : 'bg-green-200 text-green-800'
-                }`}
-              >
-                {book['Emprestado?'] === 'TRUE' ? 'Emprestado' : 'Disponível'}
-              </span>
+              <div className="flex flex-wrap gap-1 justify-end">
+                <span
+                  className={`text-xs font-medium px-2 py-1 rounded-full ${
+                    book['Emprestado?'] === 'TRUE'
+                      ? 'bg-red-200 text-red-800'
+                      : 'bg-green-200 text-green-800'
+                  }`}
+                >
+                  {book['Emprestado?'] === 'TRUE' ? 'Emprestado' : 'Disponível'}
+                </span>
+
+                {validRecommendations.includes(book['Recomendação nível Sejong']) && (
+                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                    {book['Recomendação nível Sejong']}
+                  </span>
+                )}
+              </div>
             </div>
+
 
             <p className="text-sm text-gray-700">
               <span className="font-medium">Autor:</span> {book['Autor'] || 'Desconhecido'}
