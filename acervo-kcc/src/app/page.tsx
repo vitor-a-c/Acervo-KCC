@@ -95,71 +95,80 @@ export default function HomePage() {
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
-    <main className="p-6">
+    <main className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">📚 Biblioteca KCC</h1>
 
       {/* Filters */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-6 p-4 bg-white rounded-xl shadow-md border space-y-4 md:space-y-0 md:grid md:grid-cols-4 md:gap-4">
+      {/* Search input */}
+      <div className="flex flex-col">
+        <label htmlFor="search" className="text-sm font-medium mb-1">🔍 Buscar</label>
         <input
+          id="search"
           type="text"
           value={searchTerm}
           onChange={handleSearch}
-          placeholder="🔍 Buscar por título, autor ou código..."
+          placeholder="Título, autor ou código..."
           className="p-2 border rounded-md shadow-sm"
         />
-
-        {/* Main Category Dropdown */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium">Tema Principal</label>
-          <select
-            className="w-full border p-2 rounded"
-            value={mainCategory}
-            onChange={(e) => {
-              setMainCategory(e.target.value);
-              setSubCategory(""); // reset subcategory
-            }}
-          >
-            <option value="">Todos os temas</option>
-            {mainCategories.map((cat) => (
-              <option key={cat.code} value={cat.code}>
-                {cat.code} - {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Subcategory Dropdown */}
-        <div className="mb-4">
-  <label className="block text-sm font-medium">Subtema</label>
-  <select
-    className="w-full border p-2 rounded bg-gray-100 disabled:opacity-50"
-    value={subCategory}
-    onChange={(e) => setSubCategory(e.target.value)}
-    disabled={!mainCategory}
-  >
-    <option value="">Todos os subtemas</option>
-    {mainCategory &&
-      subcategories.get(mainCategory)?.map((sub) => (
-        <option key={sub.code} value={sub.code}>
-          {sub.code} - {sub.label}
-        </option>
-      ))}
-  </select>
-</div>
-
-
-        <label className="inline-flex items-center space-x-2">
-          <input
-            type="checkbox"
-            checked={onlyAvailable}
-            onChange={handleAvailabilityToggle}
-          />
-          <span>Mostrar apenas disponíveis</span>
-        </label>
       </div>
 
+      {/* Main category dropdown */}
+      <div className="flex flex-col">
+        <label htmlFor="main-category" className="text-sm font-medium mb-1">Tema principal</label>
+        <select
+          id="main-category"
+          className="w-full border p-2 rounded"
+          value={mainCategory}
+          onChange={(e) => {
+            setMainCategory(e.target.value);
+            setSubCategory(""); // reset subcategory
+          }}
+        >
+          <option value="">Todos os temas</option>
+          {mainCategories.map((cat) => (
+            <option key={cat.code} value={cat.code}>
+              {cat.code} - {cat.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Subcategory dropdown */}
+      <div className="flex flex-col">
+        <label htmlFor="sub-category" className="text-sm font-medium mb-1">Subtema</label>
+        <select
+          id="sub-category"
+          className="w-full border p-2 rounded bg-gray-100 disabled:opacity-50"
+          value={subCategory}
+          onChange={(e) => setSubCategory(e.target.value)}
+          disabled={!mainCategory}
+        >
+          <option value="">Todos os subtemas</option>
+          {mainCategory &&
+            subcategories.get(mainCategory)?.map((sub) => (
+              <option key={sub.code} value={sub.code}>
+                {sub.code} - {sub.label}
+              </option>
+            ))}
+        </select>
+      </div>
+
+      {/* Availability checkbox */}
+      <div className="flex items-center mt-6 md:mt-0">
+        <input
+          type="checkbox"
+          checked={onlyAvailable}
+          onChange={handleAvailabilityToggle}
+          id="available-only"
+          className="mr-2"
+        />
+        <label htmlFor="available-only" className="text-sm">Mostrar apenas disponíveis</label>
+      </div>
+    </div>
+
       {/* Book cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {paginatedBooks.map((book, index) => {
           const kdcCode = extractKdcCode(book['Código'] || '');
           const themeName =
@@ -167,24 +176,46 @@ export default function HomePage() {
 
           return (
             <div
-              key={index}
-              className={`border p-4 rounded-xl shadow-md ${
-                book['Emprestado?'] === 'TRUE'
-                  ? 'bg-red-100'
-                  : 'bg-green-100'
-              }`}
-            >
-              <h2 className="text-xl font-semibold">{book['Título']}</h2>
-              <p className="text-sm text-gray-700">{book['Autor']}</p>
-              <p className="text-sm">📌 Local: {book['Posição']}</p>
-              <p className="text-sm">🔖 Código: {book['Código']}</p>
-              <p className="text-sm">🧠 Tema: {themeName}</p>
-              <p className="text-sm">
-                {book['Emprestado?'] === 'TRUE'
-                  ? `⏳ Devolução: ${book['Data prevista de retorno']}`
-                  : '✅ Disponível'}
-              </p>
+            key={index}
+            className={`rounded-xl border shadow-md p-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.01] space-y-2 ${
+              book['Emprestado?'] === 'TRUE' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+            }`}
+          >
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-gray-800">{book['Título']}</h2>
+              <span
+                className={`text-xs font-medium px-2 py-1 rounded-full ${
+                  book['Emprestado?'] === 'TRUE'
+                    ? 'bg-red-200 text-red-800'
+                    : 'bg-green-200 text-green-800'
+                }`}
+              >
+                {book['Emprestado?'] === 'TRUE' ? 'Emprestado' : 'Disponível'}
+              </span>
             </div>
+
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Autor:</span> {book['Autor'] || 'Desconhecido'}
+            </p>
+
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Código:</span> {book['Código']}
+            </p>
+
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Localização:</span> {book['Posição']}
+            </p>
+
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Tema:</span> {themeName}
+            </p>
+
+            {book['Emprestado?'] === 'TRUE' && (
+              <p className="text-sm text-red-600 font-medium">
+                ⏳ Devolução: {book['Data prevista de retorno']}
+              </p>
+            )}
+          </div>
           );
         })}
       </div>
