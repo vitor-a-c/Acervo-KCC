@@ -15,10 +15,10 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY!;
   const [headers, ...rows] = data.values;
 
   return rows.map((row: string[]) => {
-    const book: any = {};
-    headers.forEach((header: string, index: number) => {
-      book[header] = row[index] || '';
-    });
-    return book;
+  const book: Record<string, string> = {};
+  headers.forEach((header: string, index: number) => {
+    book[header] = row[index] || '';
   });
+  return book;
+});
 }

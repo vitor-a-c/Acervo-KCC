@@ -26,7 +26,6 @@ export default function HomePage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [onlyAvailable, setOnlyAvailable] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [themes, setThemes] = useState<KdcTheme[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,8 +42,12 @@ export default function HomePage() {
         const data = await fetchBooksFromSheet(SHEET_ID, SHEET_NAME);
         setBooks(data);
         setThemes(getKdcThemes());
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Unknown error");
+        }
       } finally {
         setLoading(false);
       }
