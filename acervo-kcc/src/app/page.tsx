@@ -136,7 +136,7 @@ export default function Home() {
             <p><strong>Autor:</strong> {book.Autor}</p>
             <p><strong>Categoria:</strong> {book['Categoria do livro']}</p>
             <p><strong>Tema:</strong> {book.Tema}</p>
-            <p><strong>Disponível:</strong> {book['Emprestado?'] === 'Não' ? 'Sim' : 'Não'}</p>
+            <p><strong>Disponível:</strong> {book['Emprestado?'] === 'FALSE' ? 'Sim' : 'Não'}</p>
           </li>
         ))}
         {paginatedBooks.length === 0 && (
