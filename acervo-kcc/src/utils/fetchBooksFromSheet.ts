@@ -1,8 +1,10 @@
 // src/lib/fetchBooksFromSheet.ts
-export async function fetchBooksFromSheet() {
+import { Book } from '@/types/book';
+
+export async function fetchBooksFromSheet(sheetId: string, sheetName: string): Promise<Book[]> {
   const SHEET_ID = '1DDPFzfLvP-N3DZJrQYOrelHYOkuOp6l_FejuObvKdJM';
   const SHEET_NAME = 'Acervo / 도서 목록';
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY!;
+  const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY!;
 
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}?key=${API_KEY}`;
 
