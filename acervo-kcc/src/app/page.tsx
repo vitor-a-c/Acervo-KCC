@@ -2,12 +2,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fetchBooksCSV } from '@/lib/fetchBooks';
+import { fetchBooksFromSheet } from '@/utils/fetchBooksFromSheet';
 import { getKdcThemes, KdcTheme } from '@/lib/getKdcThemes';
 import { getKdcCategories } from "@/utils/kdcUtils"; // ✅ new import
 import { Book } from '@/types/book';
 
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR6HZnIZOlxHsFULlxKJ77c7tWwX07Voz5fqaVuTppaKSHUzDyIfnMRCshIULtOdIDs4GQEh2l2Ujv_/pub?gid=1081274334&single=true&output=csv';
+const SHEET_ID = 'https://docs.google.com/spreadsheets/d/1DDPFzfLvP-N3DZJrQYOrelHYOkuOp6l_FejuObvKdJM/edit?usp=sharing';
+const SHEET_NAME = 'Acervo / 도서 목록'; // Make sure this matches the tab name exactly
 const BOOKS_PER_PAGE = 20;
 
 function extractKdcCode(bookCode: string): string | null {
@@ -39,7 +40,7 @@ export default function HomePage() {
   useEffect(() => {
     const loadBooks = async () => {
       try {
-        const data = await fetchBooksCSV<Book>(CSV_URL);
+        const data = await fetchBooksFromSheet(SHEET_ID, SHEET_NAME);
         setBooks(data);
         setThemes(getKdcThemes());
       } catch (err: any) {
@@ -176,7 +177,7 @@ export default function HomePage() {
       {/* Book cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {paginatedBooks.map((book, index) => {
-          const kdcCode = extractKdcCode(book['Código'] || '');
+          const kdcCode = extractKdcCode(book['Número chamada'] || '');
           const themeName =
             themes.find((t) => t.code === kdcCode)?.name ?? 'Tema desconhecido';
 
