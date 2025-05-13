@@ -30,6 +30,7 @@ export default function HomePage() {
   const [error, setError] = useState('');
   const [mainCategory, setMainCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
+  const [sejongLevel, setSejongLevel] = useState("");
 
   const { mainCategories, subcategories } = getKdcCategories();
 
@@ -74,7 +75,11 @@ export default function HomePage() {
 
   const categoryMatch = matchesCategory(book['Número chamada'] || '');
 
-  return searchMatch && availableMatch && categoryMatch;
+  const sejongMatch = sejongLevel
+    ? book['Recomendação nível Sejong'] === sejongLevel
+    : true;
+
+  return searchMatch && availableMatch && categoryMatch && sejongMatch;
 });
 
 
@@ -167,6 +172,27 @@ export default function HomePage() {
           className="mr-2"
         />
         <label htmlFor="available-only" className="text-sm">Mostrar apenas disponíveis</label>
+      </div>
+
+      {/* Sejong Recommendation dropdown */}
+      <div className="flex flex-col">
+        <label htmlFor="sejong-level" className="text-sm font-medium mb-1">Nível Sejong</label>
+        <select
+          id="sejong-level"
+          className="w-full border p-2 rounded"
+          value={sejongLevel}
+          onChange={(e) => {
+            setSejongLevel(e.target.value);
+            setCurrentPage(1);
+          }}
+        >
+          <option value="">Todos os níveis</option>
+          {validRecommendations.map((level) => (
+            <option key={level} value={level}>
+              {level}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
 
