@@ -58,8 +58,6 @@ export default function HomePage() {
   if (!digitsMatch) return false;
   const code = digitsMatch[0];
 
-  console.log(code, bookCode, subCategory, mainCategory, code === subCategory, code.startsWith(mainCategory[0]))
-
   if (subCategory) return code === subCategory;
   if (mainCategory) return code.startsWith(mainCategory[0]); // e.g., "1" for "100" matches "101", "102"...
   
@@ -104,7 +102,7 @@ export default function HomePage() {
       <h1 className="text-2xl font-bold mb-4">📚 Biblioteca KCC</h1>
 
       {/* Filters */}
-      <div className="mb-6 p-4 bg-white rounded-xl shadow-md border space-y-4 md:space-y-0 md:grid md:grid-cols-4 md:gap-4">
+      <div className="mb-6 p-4 rounded-xl shadow-md border space-y-4 md:space-y-0 md:grid md:grid-cols-4 md:gap-4">
       {/* Search input */}
       <div className="flex flex-col">
         <label htmlFor="search" className="text-sm font-medium mb-1">🔍 Buscar</label>
@@ -132,7 +130,7 @@ export default function HomePage() {
         >
           <option value="">Todos os temas</option>
           {mainCategories.map((cat) => (
-            <option key={cat.code} value={cat.code}>
+            <option key={cat.code} value={cat.code} className="text-primary">
               {cat.code} - {cat.name}
             </option>
           ))}
@@ -144,7 +142,7 @@ export default function HomePage() {
         <label htmlFor="sub-category" className="text-sm font-medium mb-1">Subtema</label>
         <select
           id="sub-category"
-          className="w-full border p-2 rounded bg-gray-100 disabled:opacity-50"
+          className="w-full border p-2 rounded disabled:opacity-50"
           value={subCategory}
           onChange={(e) => setSubCategory(e.target.value)}
           disabled={!mainCategory}
