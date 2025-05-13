@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchBooksFromSheet } from '@/utils/fetchBooksFromSheet';
-import { getKdcThemes, KdcTheme } from '@/lib/getKdcThemes';
+import { getKdcThemes, KdcTheme } from '@/utils/getKdcThemes';
 import { getKdcCategories } from "@/utils/kdcUtils"; // ✅ new import
 import { Book } from '@/types/book';
 
@@ -58,6 +58,8 @@ export default function HomePage() {
   if (!digitsMatch) return false;
   const code = digitsMatch[0];
 
+  console.log(code, bookCode, subCategory, mainCategory, code === subCategory, code.startsWith(mainCategory[0]))
+
   if (subCategory) return code === subCategory;
   if (mainCategory) return code.startsWith(mainCategory[0]); // e.g., "1" for "100" matches "101", "102"...
   
@@ -65,14 +67,14 @@ export default function HomePage() {
 };
 
   const filteredBooks = books.filter((book) => {
-  const searchMatch = [book['Título'], book['Autor'], book['Código']]
+  const searchMatch = [book['Título'], book['Autor'], book['Número chamada'], book['Código']]
     .join(' ')
     .toLowerCase()
     .includes(searchTerm.toLowerCase());
 
   const availableMatch = !onlyAvailable || book['Emprestado?'] !== 'TRUE';
 
-  const categoryMatch = matchesCategory(book['Código'] || '');
+  const categoryMatch = matchesCategory(book['Número chamada'] || '');
 
   return searchMatch && availableMatch && categoryMatch;
 });
@@ -94,7 +96,7 @@ export default function HomePage() {
     setCurrentPage(1);
   };
 
-  if (loading) return <div className="p-4">Loading...</div>;
+  if (loading) return <div className="p-4">Carregando página...</div>;
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
@@ -219,7 +221,7 @@ export default function HomePage() {
             </p>
 
             <p className="text-sm text-gray-700">
-              <span className="font-medium">Tema:</span> {themeName}
+              <span className="font-medium">Tema:</span> {kdcCode} {themeName}
             </p>
 
             {book['Emprestado?'] === 'TRUE' && (
