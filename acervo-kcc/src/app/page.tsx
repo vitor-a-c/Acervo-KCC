@@ -58,6 +58,8 @@ export default function HomePage() {
   if (!digitsMatch) return false;
   const code = digitsMatch[0];
 
+  console.log(code, bookCode, subCategory, mainCategory, code === subCategory, code.startsWith(mainCategory[0]))
+
   if (subCategory) return code === subCategory;
   if (mainCategory) return code.startsWith(mainCategory[0]); // e.g., "1" for "100" matches "101", "102"...
   
@@ -65,14 +67,14 @@ export default function HomePage() {
 };
 
   const filteredBooks = books.filter((book) => {
-  const searchMatch = [book['Título'], book['Autor'], book['Código']]
+  const searchMatch = [book['Título'], book['Autor'], book['Número chamada'], book['Código']]
     .join(' ')
     .toLowerCase()
     .includes(searchTerm.toLowerCase());
 
   const availableMatch = !onlyAvailable || book['Emprestado?'] !== 'TRUE';
 
-  const categoryMatch = matchesCategory(book['Código'] || '');
+  const categoryMatch = matchesCategory(book['Número chamada'] || '');
 
   return searchMatch && availableMatch && categoryMatch;
 });
