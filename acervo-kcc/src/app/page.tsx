@@ -2,12 +2,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fetchBooksCSV } from '@/lib/fetchBooks';
+import { fetchBooksFromSheet } from '@/utils/fetchBooksFromSheet';
 import { getKdcThemes, KdcTheme } from '@/lib/getKdcThemes';
 import { getKdcCategories } from "@/utils/kdcUtils"; // ✅ new import
 import { Book } from '@/types/book';
 
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR6HZnIZOlxHsFULlxKJ77c7tWwX07Voz5fqaVuTppaKSHUzDyIfnMRCshIULtOdIDs4GQEh2l2Ujv_/pub?gid=1081274334&single=true&output=csv';
 const BOOKS_PER_PAGE = 20;
 
 function extractKdcCode(bookCode: string): string | null {
@@ -25,7 +24,6 @@ export default function HomePage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [onlyAvailable, setOnlyAvailable] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [themes, setThemes] = useState<KdcTheme[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,11 +37,15 @@ export default function HomePage() {
   useEffect(() => {
     const loadBooks = async () => {
       try {
-        const data = await fetchBooksCSV<Book>(CSV_URL);
+        const data = await fetchBooksFromSheet();
         setBooks(data);
         setThemes(getKdcThemes());
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Unknown error");
+        }
       } finally {
         setLoading(false);
       }
@@ -84,11 +86,6 @@ export default function HomePage() {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTheme(e.target.value);
     setCurrentPage(1);
   };
 
@@ -176,7 +173,7 @@ export default function HomePage() {
       {/* Book cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {paginatedBooks.map((book, index) => {
-          const kdcCode = extractKdcCode(book['Código'] || '');
+          const kdcCode = extractKdcCode(book['Número chamada'] || '');
           const themeName =
             themes.find((t) => t.code === kdcCode)?.name ?? 'Tema desconhecido';
 
