@@ -1,16 +1,9 @@
 // src/utils/hybridKdcUtils.ts
 import { Language } from '@/lib/translations';
+import kdcJsonData from '@/data/kdc-codes.json';
 
-// Import the JSON data differently to avoid Turbopack issues
-let kdcCodesData: Record<string, string> = {};
-
-// Initialize the data - this avoids the Turbopack import issue
-try {
-  kdcCodesData = require('@/data/kdc-codes.json')[0] || {};
-} catch (error) {
-  // Fallback to empty object if import fails
-  kdcCodesData = {};
-}
+// Import the JSON data properly for production builds
+const kdcCodesData: Record<string, string> = (kdcJsonData as Record<string, string>[])[0] || {};
 
 // User-friendly main categories for filtering
 export interface MainCategory {
@@ -828,7 +821,7 @@ export function getDetailedTheme(code: string, language: Language = 'pt'): strin
   // Use the loaded data directly
   if (kdcCodesData[code]) {
     // If we have exact match, return it
-    let theme = kdcCodesData[code];
+    const theme = kdcCodesData[code];
     
     // For Korean-English format, extract the appropriate part based on language
     if (theme.includes(' ') && (theme.includes('한') || theme.includes('일') || theme.includes('중'))) {
@@ -849,7 +842,7 @@ export function getDetailedTheme(code: string, language: Language = 'pt'): strin
   // Try tens (e.g., 811 → 810)
   const tensCode = code.substring(0, 2) + '0';
   if (kdcCodesData[tensCode]) {
-    let theme = kdcCodesData[tensCode];
+    const theme = kdcCodesData[tensCode];
     if (theme.includes(' ')) {
       const parts = theme.split(' ');
       if (language === 'ko') {
@@ -864,7 +857,7 @@ export function getDetailedTheme(code: string, language: Language = 'pt'): strin
   // Try hundreds (e.g., 811 → 800)
   const hundredsCode = code.substring(0, 1) + '00';
   if (kdcCodesData[hundredsCode]) {
-    let theme = kdcCodesData[hundredsCode];
+    const theme = kdcCodesData[hundredsCode];
     if (theme.includes(' ')) {
       const parts = theme.split(' ');
       if (language === 'ko') {
