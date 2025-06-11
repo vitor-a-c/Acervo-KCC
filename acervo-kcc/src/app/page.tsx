@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { fetchBooksFromSheet } from '@/utils/fetchBooksFromSheet';
 import { Book } from '@/types/book';
 import { useLanguage, formatString } from '@/contexts/LanguageContext';
-import { getMainCategories, getSubcategories, getThemeTranslation } from '@/utils/improvedKdcUtils';
+import { getMainCategories, getSubcategories, getDetailedTheme } from '@/utils/hybridKdcUtils';
 
 const BOOKS_PER_PAGE = 12;
 
@@ -17,7 +17,8 @@ function extractKdcCode(bookCode: string): string | null {
 const validRecommendations = [
   '1A+', '1B+', '2A+', '2B+', '3A+', '3B+',
   '4A+', '4B+', '5A+', '5B+',
-  'Português', 'Inglês (English)'];
+  'Português', 'Inglês (English)'
+];
 
 // Helper functions
 function isBookAvailable(book: Book): boolean {
@@ -66,6 +67,26 @@ export default function HomePage() {
   const mainCategories = getMainCategories(language);
   const subcategories = getSubcategories(mainCategory, language);
 
+  // Category matching function
+  const matchesCategory = (bookCode: string): boolean => {
+    const digitsMatch = bookCode.match(/\d{3}/);
+    if (!digitsMatch) return false;
+    const code = digitsMatch[0];
+
+    // If subcategory is selected, check if code starts with the subcategory prefix
+    if (subCategory) {
+      return code.startsWith(subCategory);
+    }
+    
+    // If main category is selected, check if code starts with the main category prefix
+    if (mainCategory) {
+      const mainPrefix = mainCategory.substring(0, 1);
+      return code.startsWith(mainPrefix);
+    }
+    
+    return true;
+  };
+
   useEffect(() => {
     const loadBooks = async () => {
       try {
@@ -83,21 +104,6 @@ export default function HomePage() {
     };
     loadBooks();
   }, []);
-
-  const matchesCategory = (bookCode: string) => {
-    const digitsMatch = bookCode.match(/\d{3}/);
-    if (!digitsMatch) return false;
-    const code = digitsMatch[0];
-
-    if (subCategory) return code === subCategory;
-    if (mainCategory) {
-      // Check if the code starts with the main category (e.g., 8xx for 800s)
-      const mainPrefix = mainCategory.substring(0, 1);
-      return code.startsWith(mainPrefix);
-    }
-    
-    return true;
-  };
 
   const filteredBooks = books.filter((book) => {
     const searchMatch = [book['Título'], book['Autor'], book['Número chamada'], book['Código']]
@@ -353,7 +359,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedBooks.map((book, index) => {
               const kdcCode = extractKdcCode(book['Número chamada'] || '');
-              const themeName = kdcCode ? getThemeTranslation(kdcCode, language) : t.book.unknownTheme;
+              const themeName = kdcCode ? getDetailedTheme(kdcCode, language) : t.book.unknownTheme;
               
               // Check if it's a Korean language level (for flag emoji)
               const isKoreanLevel = book['Recomendação nível Sejong'] && 

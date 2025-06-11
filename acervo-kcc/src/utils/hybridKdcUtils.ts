@@ -1,7 +1,19 @@
-// src/utils/improvedKdcUtils.ts
+// src/utils/hybridKdcUtils.ts
 import { Language } from '@/lib/translations';
 
-export interface KdcMainCategory {
+// Import the JSON data differently to avoid Turbopack issues
+let kdcCodesData: Record<string, string> = {};
+
+// Initialize the data - this avoids the Turbopack import issue
+try {
+  kdcCodesData = require('@/data/kdc-codes.json')[0] || {};
+} catch (error) {
+  // Fallback to empty object if import fails
+  kdcCodesData = {};
+}
+
+// User-friendly main categories for filtering
+export interface MainCategory {
   code: string;
   translations: {
     pt: string;
@@ -10,7 +22,7 @@ export interface KdcMainCategory {
   };
 }
 
-export interface KdcSubcategory {
+export interface SubCategory {
   code: string;
   mainCode: string;
   translations: {
@@ -20,8 +32,8 @@ export interface KdcSubcategory {
   };
 }
 
-// Main categories organized by hundreds
-export const kdcMainCategories: KdcMainCategory[] = [
+// Simplified main categories for filtering (user-friendly)
+export const mainCategories: MainCategory[] = [
   {
     code: "000",
     translations: {
@@ -33,9 +45,9 @@ export const kdcMainCategories: KdcMainCategory[] = [
   {
     code: "100", 
     translations: {
-      pt: "Filosofia",
+      pt: "Filosofia e Psicologia",
       ko: "철학",
-      en: "Philosophy"
+      en: "Philosophy & Psychology"
     }
   },
   {
@@ -104,11 +116,11 @@ export const kdcMainCategories: KdcMainCategory[] = [
   }
 ];
 
-// Subcategories with proper organization to avoid duplicates
-export const kdcSubcategories: KdcSubcategory[] = [
+// Detailed subcategories for better filtering
+export const subCategories: SubCategory[] = [
   // 000 - General Knowledge
   {
-    code: "010",
+    code: "01",
     mainCode: "000",
     translations: {
       pt: "Bibliografia e Biblioteconomia",
@@ -117,7 +129,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "020",
+    code: "02",
     mainCode: "000",
     translations: {
       pt: "Ciência da Informação",
@@ -126,16 +138,16 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "030",
+    code: "03",
     mainCode: "000",
     translations: {
-      pt: "Enciclopédias",
+      pt: "Enciclopédias e Obras Gerais",
       ko: "백과사전",
-      en: "Encyclopedias"
+      en: "Encyclopedias & General Works"
     }
   },
   {
-    code: "070",
+    code: "07",
     mainCode: "000",
     translations: {
       pt: "Jornalismo e Mídia",
@@ -144,9 +156,9 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
 
-  // 100 - Philosophy
+  // 100 - Philosophy & Psychology
   {
-    code: "110",
+    code: "11",
     mainCode: "100",
     translations: {
       pt: "Metafísica",
@@ -155,7 +167,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "120",
+    code: "12",
     mainCode: "100",
     translations: {
       pt: "Epistemologia",
@@ -164,7 +176,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "150",
+    code: "15",
     mainCode: "100",
     translations: {
       pt: "Filosofia Oriental",
@@ -173,7 +185,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "160",
+    code: "16",
     mainCode: "100",
     translations: {
       pt: "Filosofia Ocidental",
@@ -182,7 +194,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "170",
+    code: "17",
     mainCode: "100",
     translations: {
       pt: "Lógica",
@@ -191,7 +203,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "180",
+    code: "18",
     mainCode: "100",
     translations: {
       pt: "Psicologia",
@@ -200,7 +212,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "190",
+    code: "19",
     mainCode: "100",
     translations: {
       pt: "Ética",
@@ -211,7 +223,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
 
   // 200 - Religion
   {
-    code: "220",
+    code: "22",
     mainCode: "200",
     translations: {
       pt: "Budismo",
@@ -220,7 +232,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "230",
+    code: "23",
     mainCode: "200",
     translations: {
       pt: "Cristianismo",
@@ -229,7 +241,34 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "280",
+    code: "24",
+    mainCode: "200",
+    translations: {
+      pt: "Taoísmo",
+      ko: "도교",
+      en: "Taoism"
+    }
+  },
+  {
+    code: "25",
+    mainCode: "200",
+    translations: {
+      pt: "Cheondoísmo",
+      ko: "천도교",
+      en: "Cheondoism"
+    }
+  },
+  {
+    code: "27",
+    mainCode: "200",
+    translations: {
+      pt: "Hinduísmo",
+      ko: "힌두교, 브라만교",
+      en: "Hinduism"
+    }
+  },
+  {
+    code: "28",
     mainCode: "200",
     translations: {
       pt: "Islamismo",
@@ -240,7 +279,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
 
   // 300 - Social Sciences
   {
-    code: "320",
+    code: "32",
     mainCode: "300",
     translations: {
       pt: "Economia",
@@ -249,7 +288,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "330",
+    code: "33",
     mainCode: "300",
     translations: {
       pt: "Sociologia",
@@ -258,7 +297,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "340",
+    code: "34",
     mainCode: "300",
     translations: {
       pt: "Ciência Política",
@@ -267,7 +306,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "350",
+    code: "35",
     mainCode: "300",
     translations: {
       pt: "Administração Pública",
@@ -276,7 +315,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "360",
+    code: "36",
     mainCode: "300",
     translations: {
       pt: "Direito",
@@ -285,7 +324,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "370",
+    code: "37",
     mainCode: "300",
     translations: {
       pt: "Educação",
@@ -294,7 +333,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "380",
+    code: "38",
     mainCode: "300",
     translations: {
       pt: "Folclore e Costumes",
@@ -303,7 +342,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "390",
+    code: "39",
     mainCode: "300",
     translations: {
       pt: "Defesa e Estudos Militares",
@@ -314,7 +353,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
 
   // 400 - Natural Sciences
   {
-    code: "410",
+    code: "41",
     mainCode: "400",
     translations: {
       pt: "Matemática",
@@ -323,7 +362,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "420",
+    code: "42",
     mainCode: "400",
     translations: {
       pt: "Física",
@@ -332,7 +371,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "430",
+    code: "43",
     mainCode: "400",
     translations: {
       pt: "Química",
@@ -341,7 +380,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "440",
+    code: "44",
     mainCode: "400",
     translations: {
       pt: "Astronomia",
@@ -350,7 +389,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "450",
+    code: "45",
     mainCode: "400",
     translations: {
       pt: "Ciências da Terra",
@@ -359,7 +398,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "470",
+    code: "47",
     mainCode: "400",
     translations: {
       pt: "Ciências da Vida",
@@ -368,7 +407,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "480",
+    code: "48",
     mainCode: "400",
     translations: {
       pt: "Botânica",
@@ -377,7 +416,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "490",
+    code: "49",
     mainCode: "400",
     translations: {
       pt: "Zoologia",
@@ -388,7 +427,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
 
   // 500 - Technology & Applied Sciences
   {
-    code: "510",
+    code: "51",
     mainCode: "500",
     translations: {
       pt: "Medicina",
@@ -397,7 +436,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "520",
+    code: "52",
     mainCode: "500",
     translations: {
       pt: "Agricultura",
@@ -406,7 +445,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "530",
+    code: "53",
     mainCode: "500",
     translations: {
       pt: "Engenharia Civil",
@@ -415,7 +454,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "540",
+    code: "54",
     mainCode: "500",
     translations: {
       pt: "Arquitetura",
@@ -424,7 +463,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "550",
+    code: "55",
     mainCode: "500",
     translations: {
       pt: "Engenharia Mecânica",
@@ -433,7 +472,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "560",
+    code: "56",
     mainCode: "500",
     translations: {
       pt: "Engenharia Elétrica",
@@ -442,7 +481,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "570",
+    code: "57",
     mainCode: "500",
     translations: {
       pt: "Engenharia Química",
@@ -451,7 +490,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "580",
+    code: "58",
     mainCode: "500",
     translations: {
       pt: "Manufatura",
@@ -460,7 +499,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "590",
+    code: "59",
     mainCode: "500",
     translations: {
       pt: "Economia Doméstica",
@@ -471,7 +510,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
 
   // 600 - Arts
   {
-    code: "620",
+    code: "62",
     mainCode: "600",
     translations: {
       pt: "Escultura",
@@ -480,7 +519,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "630",
+    code: "63",
     mainCode: "600",
     translations: {
       pt: "Artesanato",
@@ -489,7 +528,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "640",
+    code: "64",
     mainCode: "600",
     translations: {
       pt: "Caligrafia",
@@ -498,7 +537,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "650",
+    code: "65",
     mainCode: "600",
     translations: {
       pt: "Pintura e Design",
@@ -507,7 +546,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "660",
+    code: "66",
     mainCode: "600",
     translations: {
       pt: "Fotografia",
@@ -516,7 +555,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "670",
+    code: "67",
     mainCode: "600",
     translations: {
       pt: "Música",
@@ -525,7 +564,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "680",
+    code: "68",
     mainCode: "600",
     translations: {
       pt: "Artes Performáticas",
@@ -534,7 +573,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "690",
+    code: "69",
     mainCode: "600",
     translations: {
       pt: "Esportes e Recreação",
@@ -545,7 +584,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
 
   // 700 - Language
   {
-    code: "710",
+    code: "71",
     mainCode: "700",
     translations: {
       pt: "Coreano",
@@ -554,7 +593,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "720",
+    code: "72",
     mainCode: "700",
     translations: {
       pt: "Chinês",
@@ -563,7 +602,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "730",
+    code: "73",
     mainCode: "700",
     translations: {
       pt: "Japonês e Outras Línguas Asiáticas",
@@ -572,7 +611,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "740",
+    code: "74",
     mainCode: "700",
     translations: {
       pt: "Inglês",
@@ -581,7 +620,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "750",
+    code: "75",
     mainCode: "700",
     translations: {
       pt: "Alemão",
@@ -590,7 +629,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "760",
+    code: "76",
     mainCode: "700",
     translations: {
       pt: "Francês",
@@ -599,7 +638,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "770",
+    code: "77",
     mainCode: "700",
     translations: {
       pt: "Espanhol e Português",
@@ -608,7 +647,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "780",
+    code: "78",
     mainCode: "700",
     translations: {
       pt: "Italiano",
@@ -617,9 +656,9 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
 
-  // 800 - Literature (organized by language/region to avoid duplicates)
+  // 800 - Literature (organized by language/region)
   {
-    code: "810",
+    code: "81",
     mainCode: "800",
     translations: {
       pt: "Literatura Coreana",
@@ -628,7 +667,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "820",
+    code: "82",
     mainCode: "800",
     translations: {
       pt: "Literatura Chinesa",
@@ -637,7 +676,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "830",
+    code: "83",
     mainCode: "800",
     translations: {
       pt: "Literatura Japonesa e Asiática",
@@ -646,7 +685,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "840",
+    code: "84",
     mainCode: "800",
     translations: {
       pt: "Literatura Inglesa e Americana",
@@ -655,7 +694,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "850",
+    code: "85",
     mainCode: "800",
     translations: {
       pt: "Literatura Alemã",
@@ -664,7 +703,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "860",
+    code: "86",
     mainCode: "800",
     translations: {
       pt: "Literatura Francesa",
@@ -673,7 +712,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "870",
+    code: "87",
     mainCode: "800",
     translations: {
       pt: "Literatura Espanhola e Portuguesa",
@@ -682,7 +721,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "880",
+    code: "88",
     mainCode: "800",
     translations: {
       pt: "Literatura Italiana",
@@ -691,7 +730,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "890",
+    code: "89",
     mainCode: "800",
     translations: {
       pt: "Outras Literaturas",
@@ -702,7 +741,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
 
   // 900 - History & Geography
   {
-    code: "910",
+    code: "91",
     mainCode: "900",
     translations: {
       pt: "História da Ásia",
@@ -711,7 +750,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "920",
+    code: "92",
     mainCode: "900",
     translations: {
       pt: "História da Europa",
@@ -720,7 +759,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "930",
+    code: "93",
     mainCode: "900",
     translations: {
       pt: "História da África",
@@ -729,7 +768,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "940",
+    code: "94",
     mainCode: "900",
     translations: {
       pt: "História da América do Norte",
@@ -738,7 +777,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "950",
+    code: "95",
     mainCode: "900",
     translations: {
       pt: "História da América do Sul",
@@ -747,7 +786,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "980",
+    code: "98",
     mainCode: "900",
     translations: {
       pt: "Geografia",
@@ -756,7 +795,7 @@ export const kdcSubcategories: KdcSubcategory[] = [
     }
   },
   {
-    code: "990",
+    code: "99",
     mainCode: "900",
     translations: {
       pt: "Biografia",
@@ -766,15 +805,17 @@ export const kdcSubcategories: KdcSubcategory[] = [
   }
 ];
 
+// Helper function to get main categories for filtering
 export function getMainCategories(language: Language = 'pt'): Array<{code: string, name: string}> {
-  return kdcMainCategories.map(cat => ({
+  return mainCategories.map(cat => ({
     code: cat.code,
     name: cat.translations[language]
   }));
 }
 
+// Helper function to get subcategories for filtering
 export function getSubcategories(mainCode: string, language: Language = 'pt'): Array<{code: string, label: string}> {
-  return kdcSubcategories
+  return subCategories
     .filter(sub => sub.mainCode === mainCode)
     .map(sub => ({
       code: sub.code,
@@ -782,20 +823,60 @@ export function getSubcategories(mainCode: string, language: Language = 'pt'): A
     }));
 }
 
-export function getThemeTranslation(code: string, language: Language = 'pt'): string {
-  // First check if it's a main category
-  const mainCategory = kdcMainCategories.find(cat => cat.code === code);
-  if (mainCategory) {
-    return mainCategory.translations[language];
+// Smart theme lookup function for book cards (uses detailed KDC data)
+export function getDetailedTheme(code: string, language: Language = 'pt'): string {
+  // Use the loaded data directly
+  if (kdcCodesData[code]) {
+    // If we have exact match, return it
+    let theme = kdcCodesData[code];
+    
+    // For Korean-English format, extract the appropriate part based on language
+    if (theme.includes(' ') && (theme.includes('한') || theme.includes('일') || theme.includes('중'))) {
+      const parts = theme.split(' ');
+      if (language === 'ko') {
+        // Return Korean part (usually first)
+        return parts[0];
+      } else {
+        // Return English part (usually after Korean)
+        return parts.slice(1).join(' ');
+      }
+    }
+    
+    return theme;
   }
   
-  // Then check subcategories
-  const subcategory = kdcSubcategories.find(sub => sub.code === code);
-  if (subcategory) {
-    return subcategory.translations[language];
+  // If not found, try fallback logic
+  // Try tens (e.g., 811 → 810)
+  const tensCode = code.substring(0, 2) + '0';
+  if (kdcCodesData[tensCode]) {
+    let theme = kdcCodesData[tensCode];
+    if (theme.includes(' ')) {
+      const parts = theme.split(' ');
+      if (language === 'ko') {
+        return parts[0];
+      } else {
+        return parts.slice(1).join(' ');
+      }
+    }
+    return theme;
   }
   
-  // Fallback to unknown theme translation
+  // Try hundreds (e.g., 811 → 800)
+  const hundredsCode = code.substring(0, 1) + '00';
+  if (kdcCodesData[hundredsCode]) {
+    let theme = kdcCodesData[hundredsCode];
+    if (theme.includes(' ')) {
+      const parts = theme.split(' ');
+      if (language === 'ko') {
+        return parts[0];
+      } else {
+        return parts.slice(1).join(' ');
+      }
+    }
+    return theme;
+  }
+  
+  // Final fallback to unknown theme translations
   const unknownTranslations = {
     pt: "Tema desconhecido",
     ko: "알 수 없는 주제", 
@@ -803,4 +884,24 @@ export function getThemeTranslation(code: string, language: Language = 'pt'): st
   };
   
   return unknownTranslations[language];
+}
+
+// Function to check if a book matches the selected filters
+export function matchesCategory(bookCode: string, mainCategory: string, subCategory: string): boolean {
+  const digitsMatch = bookCode.match(/\d{3}/);
+  if (!digitsMatch) return false;
+  const code = digitsMatch[0];
+
+  // If subcategory is selected, check if code starts with the subcategory prefix
+  if (subCategory) {
+    return code.startsWith(subCategory);
+  }
+  
+  // If main category is selected, check if code starts with the main category prefix
+  if (mainCategory) {
+    const mainPrefix = mainCategory.substring(0, 1);
+    return code.startsWith(mainPrefix);
+  }
+  
+  return true;
 }
