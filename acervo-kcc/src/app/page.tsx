@@ -6,6 +6,7 @@ import { fetchBooksFromSheet } from '@/utils/fetchBooksFromSheet';
 import { Book } from '@/types/book';
 import { useLanguage, formatString } from '@/contexts/LanguageContext';
 import { getMainCategories, getSubcategories, getDetailedTheme } from '@/utils/hybridKdcUtils';
+import { Translations } from '@/lib/translations';
 
 const BOOKS_PER_PAGE = 12;
 
@@ -27,7 +28,7 @@ function isBookAvailable(book: Book): boolean {
   return isNotBorrowed && hasValidLocation;
 }
 
-function getAvailabilityStatus(book: Book, t: any): string {
+function getAvailabilityStatus(book: Book, t: Translations): string {
   if (book['Posição'] === 'Indisponível') {
     return t.book.unavailable;
   }
