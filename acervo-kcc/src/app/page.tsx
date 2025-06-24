@@ -76,17 +76,12 @@ export default function HomePage() {
     // Direct mapping: if location is "A1", return "A1", etc.
     // Handle cases like "A1, A2" or "A1-A3" by taking the first shelf
     if (!location || location === 'Indisponível') return null;
-    
-    // Handle special areas
-    if (location.toLowerCase().includes('studio')) return 'Studio';
-    if (location.toLowerCase().includes('outros') || location.toLowerCase().includes('other')) return 'Outros';
-    
+
     // Extract the first shelf ID from the location
-    const shelfMatch = location.match(/([A-Z]\d+)/);
+    const shelfMatch = location.match(/([A-D]\d+)/);
     if (shelfMatch) {
       return shelfMatch[1];
     }
-    
     return null;
   };
 

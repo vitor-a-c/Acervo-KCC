@@ -232,10 +232,6 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
       selected: "Estante selecionada",
       clickInstruction: "Clique em uma estante para ver detalhes",
       close: "Fechar",
-      entrance: "Entrada",
-      circulation: "Área de Circulação",
-      studyArea: "Área de Estudo",
-      reception: "Recepção",
       shelfDetails: "Detalhes da Estante",
       contains: "Contém:",
       backToLayout: "Voltar ao Layout"
@@ -248,10 +244,6 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
       selected: "선택된 서가",
       clickInstruction: "자세한 내용을 보려면 서가를 클릭하세요",
       close: "닫기",
-      entrance: "입구",
-      circulation: "열람 공간",
-      studyArea: "학습 공간",
-      reception: "접수처",
       shelfDetails: "서가 세부사항",
       contains: "포함 내용:",
       backToLayout: "배치도로 돌아가기"
@@ -264,10 +256,6 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
       selected: "Selected shelf",
       clickInstruction: "Click on a shelf to see details",
       close: "Close",
-      entrance: "Entrance",
-      circulation: "Circulation Area",
-      studyArea: "Study Area",
-      reception: "Reception",
       shelfDetails: "Shelf Details",
       contains: "Contains:",
       backToLayout: "Back to Layout"
@@ -352,7 +340,7 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
                         <p className="font-medium text-gray-900">{category}</p>
                         <p className="text-sm text-gray-600 mt-1">
                           {language === 'pt' && category.includes('Literatura Coreana') && 'Livros de autores coreanos, incluindo romances, contos e ensaios'}
-                          {language === 'pt' && category.includes('Ficção') && 'Romances e contos de diversos autores e países'}
+                          {language === 'pt' && category.includes('Ficção') && 'Romances e contos diversos'}
                           {language === 'pt' && category.includes('Arte') && 'Livros sobre história da arte, técnicas artísticas e artistas'}
                           {language === 'pt' && category.includes('História') && 'Livros sobre história mundial, regional e temática'}
                           {language === 'pt' && category.includes('Língua Coreana') && 'Livros para aprendizado e estudo da língua coreana'}
