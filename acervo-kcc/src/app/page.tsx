@@ -7,6 +7,7 @@ import { Book } from '@/types/book';
 import { useLanguage, formatString } from '@/contexts/LanguageContext';
 import { getMainCategories, getSubcategories, getDetailedTheme } from '@/utils/hybridKdcUtils';
 import { Translations } from '@/lib/translations';
+import LibraryLayoutModal from '@/components/LibraryLayoutModal';
 
 const BOOKS_PER_PAGE = 12;
 
@@ -63,10 +64,47 @@ export default function HomePage() {
   const [subCategory, setSubCategory] = useState("");
   const [sejongLevel, setSejongLevel] = useState("");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState(false);
+  const [highlightedShelf, setHighlightedShelf] = useState<string | undefined>();
 
   // Get categories based on current language
   const mainCategories = getMainCategories(language);
   const subcategories = getSubcategories(mainCategory, language);
+
+  // Function to find which shelf contains a specific book based on its position
+  const findShelfForLocation = (location: string): string | null => {
+    // Direct mapping: if location is "A1", return "A1", etc.
+    // Handle cases like "A1, A2" or "A1-A3" by taking the first shelf
+    if (!location || location === 'Indisponível') return null;
+    
+    // Handle special areas
+    if (location.toLowerCase().includes('studio')) return 'Studio';
+    if (location.toLowerCase().includes('outros') || location.toLowerCase().includes('other')) return 'Outros';
+    
+    // Extract the first shelf ID from the location
+    const shelfMatch = location.match(/([A-Z]\d+)/);
+    if (shelfMatch) {
+      return shelfMatch[1];
+    }
+    
+    return null;
+  };
+
+  const handleShowInLayout = (location: string) => {
+    if (!location || location === 'Indisponível') {
+      console.log('Book location unavailable');
+      return;
+    }
+    
+    const shelf = findShelfForLocation(location);
+    if (shelf) {
+      console.log(`Showing book location: ${location} -> Shelf: ${shelf}`);
+      setHighlightedShelf(shelf);
+      setIsLayoutModalOpen(true);
+    } else {
+      console.log(`Could not find shelf for location: ${location}`);
+    }
+  };
 
   // Category matching function
   const matchesCategory = (bookCode: string): boolean => {
@@ -209,6 +247,19 @@ export default function HomePage() {
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Library Layout Button */}
+            <div className="mt-6">
+              <button
+                onClick={() => setIsLayoutModalOpen(true)}
+                className="inline-flex items-center px-6 py-3 border border-white/30 text-base font-medium rounded-md text-white bg-white/10 hover:bg-white/20 transition-all duration-200 backdrop-blur-sm"
+              >
+                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                {t.hero.viewLayout}
+              </button>
             </div>
           </div>
         </div>
@@ -433,6 +484,19 @@ export default function HomePage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Show in Layout Button */}
+                  {book['Posição'] && book['Posição'] !== 'Indisponível' && (
+                    <div className="pt-3 border-t border-gray-100">
+                      <button
+                        onClick={() => handleShowInLayout(book['Posição'])}
+                        className="text-xs px-3 py-1 rounded-full border transition-colors hover:bg-gray-50"
+                        style={{borderColor: '#053863', color: '#053863'}}
+                      >
+                        📍 {language === 'pt' ? 'Ver no layout' : language === 'ko' ? '배치도에서 보기' : 'Show in layout'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -529,6 +593,16 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Library Layout Modal */}
+      <LibraryLayoutModal 
+        isOpen={isLayoutModalOpen}
+        onClose={() => {
+          setIsLayoutModalOpen(false);
+          setHighlightedShelf(undefined);
+        }}
+        highlightedShelf={highlightedShelf}
+      />
     </div>
   );
 }
