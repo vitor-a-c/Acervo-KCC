@@ -178,7 +178,7 @@ export default function AboutPage() {
               <h2 className="text-2xl font-bold mb-4" style={{color: '#053863'}}>
                 {content.welcome}
               </h2>
-              <p className="text-gray-700 leading-relaxed text-lg">
+              <p className="text-gray-700 leading-relaxed text-justify">
                 {content.welcomeText}
               </p>
             </div>
@@ -295,7 +295,7 @@ export default function AboutPage() {
                   <h3 className="text-lg font-semibold mb-3" style={{color: '#053863'}}>
                     {content.lateReturns}
                   </h3>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-gray-700 leading-relaxed text-justify">
                     {content.lateText}
                   </p>
                 </div>
@@ -304,7 +304,7 @@ export default function AboutPage() {
                   <h3 className="text-lg font-semibold mb-3" style={{color: '#053863'}}>
                     {content.damagesTitle}
                   </h3>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-gray-700 leading-relaxed text-justify">
                     {content.damagesText}
                   </p>
                 </div>
@@ -347,7 +347,7 @@ export default function AboutPage() {
               <h2 className="text-xl font-bold mb-4" style={{color: '#053863'}}>
                 {content.visitWebsite}
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-gray-700 mb-4 text-justify">
                 {content.websiteDescription}
               </p>
               <div className="space-y-3">
