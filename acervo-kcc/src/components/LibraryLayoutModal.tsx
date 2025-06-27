@@ -1,7 +1,7 @@
 // src/components/LibraryLayoutModal.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LibraryLayoutModalProps {
@@ -217,9 +217,61 @@ const shelfMapping = {
   }
 };
 
+// Special areas that are not in the main shelf layout
+const specialAreas = [
+  'infantil', 'studio', 'mesa', 'exposição', 'display', 'escritório', 'office', 
+  'sala', 'estante especial', 'área especial', 'zona especial'
+];
+
+// Function to check if a location is a valid shelf
+export function isValidShelfLocation(location: string): boolean {
+  if (!location || location === 'Indisponível') return false;
+  
+  // Check if it's a special area
+  const locationLower = location.toLowerCase();
+  if (specialAreas.some(area => locationLower.includes(area))) return false;
+  
+  // Check if we can extract a valid shelf ID
+  const shelfMatch = location.match(/([A-D]\d+)/);
+  if (shelfMatch) {
+    const shelfId = shelfMatch[1];
+    return shelfId in shelfMapping;
+  }
+  
+  return false;
+}
+
+// Function to find which shelf contains a specific book based on its position
+export function findShelfForLocation(location: string): string | null {
+  if (!isValidShelfLocation(location)) return null;
+  
+  const shelfMatch = location.match(/([A-D]\d+)/);
+  return shelfMatch ? shelfMatch[1] : null;
+}
+
 export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }: LibraryLayoutModalProps) {
   const { language } = useLanguage();
   const [selectedShelf, setSelectedShelf] = useState<string | null>(null);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [screenWidth, setScreenWidth] = useState(0);
+
+  // Handle screen size detection
+  useEffect(() => {
+    const updateScreenSize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    updateScreenSize();
+    window.addEventListener('resize', updateScreenSize);
+    return () => window.removeEventListener('resize', updateScreenSize);
+  }, []);
+
+  // Auto-switch to mobile view on small screens
+  useEffect(() => {
+    if (screenWidth > 0 && screenWidth < 768) {
+      setIsMobileView(true);
+    }
+  }, [screenWidth]);
 
   if (!isOpen) return null;
 
@@ -234,7 +286,10 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
       close: "Fechar",
       shelfDetails: "Detalhes da Estante",
       contains: "Contém:",
-      backToLayout: "Voltar ao Layout"
+      backToLayout: "Voltar ao Layout",
+      switchToMobile: "Vista Celular",
+      switchToDesktop: "Vista Desktop",
+      mobileNote: "Para melhor experiência em telas pequenas, use a vista celular"
     },
     ko: {
       title: "도서관 배치도",
@@ -246,7 +301,10 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
       close: "닫기",
       shelfDetails: "서가 세부사항",
       contains: "포함 내용:",
-      backToLayout: "배치도로 돌아가기"
+      backToLayout: "배치도로 돌아가기",
+      switchToMobile: "모바일 보기",
+      switchToDesktop: "데스크톱 보기",
+      mobileNote: "작은 화면에서는 모바일 보기를 사용하세요"
     },
     en: {
       title: "Library Layout",
@@ -258,7 +316,10 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
       close: "Close",
       shelfDetails: "Shelf Details",
       contains: "Contains:",
-      backToLayout: "Back to Layout"
+      backToLayout: "Back to Layout",
+      switchToMobile: "Mobile View",
+      switchToDesktop: "Desktop View",
+      mobileNote: "For better experience on small screens, use mobile view"
     }
   };
 
@@ -287,6 +348,129 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
   const handleShelfClick = (shelfId: string) => {
     setSelectedShelf(shelfId);
   };
+
+  // Mobile list view component
+  const MobileShelfList = () => (
+    <div className="p-4 space-y-4 max-h-96 overflow-y-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {Object.entries(shelfMapping).map(([shelfId, shelf]) => {
+          const isHighlighted = highlightedShelf === shelfId;
+          const isSelected = selectedShelf === shelfId;
+          
+          const getCategoryName = (ranges: string[]) => {
+            if (language === 'pt') return ranges[0] || '';
+            if (language === 'en') return ranges[1] || ranges[0] || '';
+            if (language === 'ko') return ranges[2] || ranges[0] || '';
+            return ranges[0] || '';
+          };
+          
+          const categoryName = getCategoryName(shelf.ranges);
+          
+          return (
+            <button
+              key={shelfId}
+              onClick={() => handleShelfClick(shelfId)}
+              className={`p-3 rounded-lg border-2 text-left transition-all duration-200 ${
+                isHighlighted 
+                  ? 'bg-red-100 border-red-500 text-red-800' 
+                  : isSelected
+                  ? 'bg-blue-100 border-blue-500 text-blue-800'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+              }`}
+            >
+              <div className="font-bold text-lg mb-1">{shelfId}</div>
+              <div className="text-sm leading-tight">
+                {categoryName}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {shelf.wall === 1 ? 
+                  (language === 'pt' ? 'Parede Principal' : language === 'ko' ? '주요 벽면' : 'Main Wall') :
+                  (language === 'pt' ? 'Parede Secundária' : language === 'ko' ? '보조 벽면' : 'Secondary Wall')
+                }
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // Desktop layout view component
+  const DesktopLayoutView = () => (
+    <div className="relative bg-gray-50 border-2 border-gray-200 rounded-lg" style={{ height: '700px' }}>
+      
+      {/* Wall 1 Label */}
+      <div className="absolute top-2 inset-x-20 text-center bg-gray-700 text-white px-3 py-1 rounded text-sm font-medium">
+        {language === 'pt' ? 'Parede Principal' : language === 'ko' ? '주요 벽면' : 'Main Wall'}
+      </div>
+      
+      {/* Wall 1 Background */}
+      <div 
+        className="absolute bg-blue-50 border border-blue-200 rounded"
+        style={{ top: '6.5%', left: '10%', right: '10%', height: '45%' }}
+      >
+      </div>
+
+      {/* Wall 2 Label */}
+      <div className="absolute bottom-2 inset-x-20 text-center bg-gray-700 text-white px-3 py-1 rounded text-sm font-medium">
+        {language === 'pt' ? 'Parede Secundária' : language === 'ko' ? '보조 벽면' : 'Secondary Wall'}
+      </div>
+      
+      {/* Wall 2 Background */}
+      <div 
+        className="absolute bg-green-50 border border-green-200 rounded"
+        style={{ top: '52%', left: '10%', right: '10%', height: '42%' }}
+      >
+      </div>
+
+      {/* Render all shelves */}
+      {Object.entries(shelfMapping).map(([shelfId, shelf]) => {
+        const isHighlighted = highlightedShelf === shelfId;
+        const isSelected = selectedShelf === shelfId;
+        
+        // Get the appropriate category name based on language
+        const getCategoryName = (ranges: string[]) => {
+          if (language === 'pt') return ranges[0] || '';
+          if (language === 'en') return ranges[1] || ranges[0] || '';
+          if (language === 'ko') return ranges[2] || ranges[0] || '';
+          return ranges[0] || '';
+        };
+        
+        const categoryName = getCategoryName(shelf.ranges);
+        const displayName = categoryName.length > 18 ? 
+          categoryName.substring(0, 18) + '...' : 
+          categoryName;
+        
+        return (
+          <div
+            key={shelfId}
+            className={`absolute border-2 rounded flex flex-col items-center justify-center text-xs font-medium cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 select-none ${
+              isHighlighted 
+                ? 'bg-red-200 border-red-500 text-red-800 shadow-lg z-20 scale-105' 
+                : isSelected
+                ? 'bg-blue-200 border-blue-500 text-blue-800 shadow-lg z-20 scale-105'
+                : 'bg-white border-gray-600 text-gray-700 hover:bg-gray-100 hover:border-gray-800'
+            }`}
+            style={shelf.position}
+            title={`${shelfId}: ${categoryName}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleShelfClick(shelfId);
+            }}
+          >
+            <div className="font-bold text-center mb-1">{shelfId}</div>
+            <div className="text-center leading-tight px-1 text-xs">
+              {displayName.split('•').map((part, idx) => (
+                <div key={idx} className="truncate" style={{fontSize: '9px', lineHeight: '1.0'}}>
+                  {part.trim()}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   // If a shelf is selected, show detail view
   if (selectedShelf) {
@@ -417,145 +601,96 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
             <h2 className="text-2xl font-bold text-gray-900">{content.title}</h2>
             <p className="text-gray-600 mt-1">{content.subtitle}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-            aria-label={content.close}
-          >
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* View Toggle */}
+            <button
+              onClick={() => setIsMobileView(!isMobileView)}
+              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              {isMobileView ? content.switchToDesktop : content.switchToMobile}
+            </button>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+              aria-label={content.close}
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
-        {/* Library Layout */}
+        {/* Content */}
         <div className="p-6">
-          <div className="relative bg-gray-50 border-2 border-gray-200 rounded-lg" style={{ height: '700px' }}>
-            
-            {/* Wall 1 Label */}
-            <div className="absolute top-2 inset-x-20 text-center bg-gray-700 text-white px-3 py-1 rounded text-sm font-medium">
-              {language === 'pt' ? 'Parede Principal' : language === 'ko' ? '주요 벽면' : 'Main Wall'}
+          {/* Mobile note */}
+          <div className="lg:hidden mb-4 bg-blue-50 rounded-lg p-3 border border-blue-200">
+            <div className="flex items-start space-x-2">
+              <span className="text-blue-600 text-sm">📱</span>
+              <p className="text-sm text-blue-800">{content.mobileNote}</p>
             </div>
-            
-            {/* Wall 1 Background */}
-            <div 
-              className="absolute bg-blue-50 border border-blue-200 rounded"
-              style={{ top: '6.5%', left: '10%', right: '10%', height: '45%' }}
-            >
-            </div>
-
-            {/* Wall 2 Label */}
-            <div className="absolute bottom-2 inset-x-20 text-center bg-gray-700 text-white px-3 py-1 rounded text-sm font-medium">
-              {language === 'pt' ? 'Parede Secundária' : language === 'ko' ? '보조 벽면' : 'Secondary Wall'}
-            </div>
-            
-            {/* Wall 2 Background */}
-            <div 
-              className="absolute bg-green-50 border border-green-200 rounded"
-              style={{ top: '52%', left: '10%', right: '10%', height: '42%' }}
-            >
-            </div>
-
-            {/* Render all shelves */}
-            {Object.entries(shelfMapping).map(([shelfId, shelf]) => {
-              const isHighlighted = highlightedShelf === shelfId;
-              const isSelected = selectedShelf === shelfId;
-              
-              // Get the appropriate category name based on language
-              const getCategoryName = (ranges: string[]) => {
-                if (language === 'pt') return ranges[0] || '';
-                if (language === 'en') return ranges[1] || ranges[0] || '';
-                if (language === 'ko') return ranges[2] || ranges[0] || '';
-                return ranges[0] || '';
-              };
-              
-              const categoryName = getCategoryName(shelf.ranges);
-              const displayName = categoryName.length > 18 ? 
-                categoryName.substring(0, 18) + '...' : 
-                categoryName;
-              
-              return (
-                <div
-                  key={shelfId}
-                  className={`absolute border-2 rounded flex flex-col items-center justify-center text-xs font-medium cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 select-none ${
-                    isHighlighted 
-                      ? 'bg-red-200 border-red-500 text-red-800 shadow-lg z-20 scale-105' 
-                      : isSelected
-                      ? 'bg-blue-200 border-blue-500 text-blue-800 shadow-lg z-20 scale-105'
-                      : 'bg-white border-gray-600 text-gray-700 hover:bg-gray-100 hover:border-gray-800'
-                  }`}
-                  style={shelf.position}
-                  title={`${shelfId}: ${categoryName}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleShelfClick(shelfId);
-                  }}
-                >
-                  <div className="font-bold text-center mb-1">{shelfId}</div>
-                  <div className="text-center leading-tight px-1 text-xs">
-                    {displayName.split('•').map((part, idx) => (
-                      <div key={idx} className="truncate" style={{fontSize: '9px', lineHeight: '1.0'}}>
-                        {part.trim()}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
           </div>
 
-          {/* Legend */}
-          <div className="mt-6 bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-3">{content.legend}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-white border-2 border-gray-600 rounded"></div>
-                <span>Estantes normais / 일반 서가 / Regular shelves</span>
-              </div>
-              {highlightedShelf && (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-red-200 border-2 border-red-500 rounded"></div>
-                  <span>{content.highlighted}</span>
-                </div>
-              )}
-              {selectedShelf && (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-blue-200 border-2 border-blue-500 rounded"></div>
-                  <span>{content.selected}</span>
-                </div>
-              )}
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-blue-50 border border-blue-200 rounded"></div>
-                <span>
-                  {language === 'pt' ? 'Parede Principal' : 
-                   language === 'ko' ? '주요 벽면' : 
-                   'Main Wall'}
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-green-50 border border-green-200 rounded"></div>
-                <span>
-                  {language === 'pt' ? 'Parede Secundária' : 
-                   language === 'ko' ? '보조 벽면' : 
-                   'Secondary Wall'}
-                </span>
-              </div>
+          {/* Render appropriate view */}
+          {isMobileView || screenWidth < 768 ? <MobileShelfList /> : <DesktopLayoutView />}
+        </div>
+
+        {/* Legend */}
+        <div className="mx-6 mb-6 bg-gray-50 rounded-lg p-4">
+          <h3 className="text-lg font-semibold mb-3">{content.legend}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-white border-2 border-gray-600 rounded"></div>
+              <span>Estantes normais / 일반 서가 / Regular shelves</span>
             </div>
-            
-            {/* Additional info */}
-            <div className="mt-4 text-gray-600 text-sm">
-              <p>{content.clickInstruction}</p>
-              <p className="mt-1">
-                <strong>
-                  {language === 'pt' ? 'Organização:' : 
-                   language === 'ko' ? '구성:' : 
-                   'Organization:'}
-                </strong> 
-                {language === 'pt' ? ' Parede Principal (A1-A6, B1-B8, C1-C5, D1-D8) • Parede Secundária (A7-A8, B9-B11, C6-C7, D9-D12)' :
-                 language === 'ko' ? ' 주요 벽면 (A1-A6, B1-B8, C1-C5, D1-D8) • 보조 벽면 (A7-A8, B9-B11, C6-C7, D9-D12)' :
-                 ' Main Wall (A1-A6, B1-B8, C1-C5, D1-D8) • Secondary Wall (A7-A8, B9-B11, C6-C7, D9-D12)'}
-              </p>
+            {highlightedShelf && (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-red-200 border-2 border-red-500 rounded"></div>
+                <span>{content.highlighted}</span>
+              </div>
+            )}
+            {selectedShelf && (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-blue-200 border-2 border-blue-500 rounded"></div>
+                <span>{content.selected}</span>
+              </div>
+            )}
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-blue-50 border border-blue-200 rounded"></div>
+              <span>
+                {language === 'pt' ? 'Parede Principal' : 
+                 language === 'ko' ? '주요 벽면' : 
+                 'Main Wall'}
+              </span>
             </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-green-50 border border-green-200 rounded"></div>
+              <span>
+                {language === 'pt' ? 'Parede Secundária' : 
+                 language === 'ko' ? '보조 벽면' : 
+                 'Secondary Wall'}
+              </span>
+            </div>
+          </div>
+          
+          {/* Additional info */}
+          <div className="mt-4 text-gray-600 text-sm">
+            <p>{isMobileView ? 
+              (language === 'pt' ? 'Toque em uma estante para ver detalhes' : 
+               language === 'ko' ? '서가를 터치하여 세부 정보 보기' : 
+               'Tap on a shelf to see details') :
+              content.clickInstruction}
+            </p>
+            <p className="mt-1">
+              <strong>
+                {language === 'pt' ? 'Organização:' : 
+                 language === 'ko' ? '구성:' : 
+                 'Organization:'}
+              </strong> 
+              {language === 'pt' ? ' Parede Principal (A1-A6, B1-B8, C1-C5, D1-D8) • Parede Secundária (A7-A8, B9-B11, C6-C7, D9-D12)' :
+               language === 'ko' ? ' 주요 벽면 (A1-A6, B1-B8, C1-C5, D1-D8) • 보조 벽면 (A7-A8, B9-B11, C6-C7, D9-D12)' :
+               ' Main Wall (A1-A6, B1-B8, C1-C5, D1-D8) • Secondary Wall (A7-A8, B9-B11, C6-C7, D9-D12)'}
+            </p>
           </div>
         </div>
 
