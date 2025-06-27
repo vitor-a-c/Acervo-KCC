@@ -7,7 +7,7 @@ import { Book } from '@/types/book';
 import { useLanguage, formatString } from '@/contexts/LanguageContext';
 import { getMainCategories, getSubcategories, getDetailedTheme } from '@/utils/hybridKdcUtils';
 import { Translations } from '@/lib/translations';
-import LibraryLayoutModal from '@/components/LibraryLayoutModal';
+import LibraryLayoutModal, { isValidShelfLocation, findShelfForLocation } from '@/components/LibraryLayoutModal';
 
 const BOOKS_PER_PAGE = 12;
 
@@ -70,20 +70,6 @@ export default function HomePage() {
   // Get categories based on current language
   const mainCategories = getMainCategories(language);
   const subcategories = getSubcategories(mainCategory, language);
-
-  // Function to find which shelf contains a specific book based on its position
-  const findShelfForLocation = (location: string): string | null => {
-    // Direct mapping: if location is "A1", return "A1", etc.
-    // Handle cases like "A1, A2" or "A1-A3" by taking the first shelf
-    if (!location || location === 'Indisponível') return null;
-
-    // Extract the first shelf ID from the location
-    const shelfMatch = location.match(/([A-D]\d+)/);
-    if (shelfMatch) {
-      return shelfMatch[1];
-    }
-    return null;
-  };
 
   const handleShowInLayout = (location: string) => {
     if (!location || location === 'Indisponível') {
@@ -480,16 +466,22 @@ export default function HomePage() {
                     )}
                   </div>
 
-                  {/* Show in Layout Button */}
+                  {/* Show in Layout Button or Special Location Badge */}
                   {book['Posição'] && book['Posição'] !== 'Indisponível' && (
                     <div className="pt-3 border-t border-gray-100">
-                      <button
-                        onClick={() => handleShowInLayout(book['Posição'])}
-                        className="text-xs px-3 py-1 rounded-full border transition-colors hover:bg-gray-50"
-                        style={{borderColor: '#053863', color: '#053863'}}
-                      >
-                        📍 {language === 'pt' ? 'Ver no layout' : language === 'ko' ? '배치도에서 보기' : 'Show in layout'}
-                      </button>
+                      {isValidShelfLocation(book['Posição']) ? (
+                        <button
+                          onClick={() => handleShowInLayout(book['Posição'])}
+                          className="text-xs px-3 py-1 rounded-full border transition-colors hover:bg-gray-50"
+                          style={{borderColor: '#053863', color: '#053863'}}
+                        >
+                          📍 {language === 'pt' ? 'Ver no layout' : language === 'ko' ? '배치도에서 보기' : 'Show in layout'}
+                        </button>
+                      ) : (
+                        <span className="text-xs px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                          📍 {language === 'pt' ? 'Área especial: ' : language === 'ko' ? '특별 구역: ' : 'Special area: '}{book['Posição']}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
