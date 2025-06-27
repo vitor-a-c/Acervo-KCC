@@ -17,6 +17,7 @@ export interface Translations {
     title: string;
     description: string;
     searchPlaceholder: string;
+    viewLayout: string;
   };
   
   // Filters
@@ -96,7 +97,8 @@ export const translations: Record<Language, Translations> = {
     hero: {
       title: "📚 Acervo Digital",
       description: "Explore nosso acervo de {count} livros sobre cultura, língua e história coreana",
-      searchPlaceholder: "Buscar por título, autor, código..."
+      searchPlaceholder: "Buscar por título, autor, código...",
+      viewLayout: "Ver Layout da Biblioteca"
     },
     filters: {
       filters: "Filtros",
@@ -113,7 +115,7 @@ export const translations: Record<Language, Translations> = {
       bookFound: "livro encontrado"
     },
     book: {
-      author: "Autor:",
+      author: "Autor(a):",
       unknown: "Desconhecido",
       code: "Código:",
       callNumber: "Chamada:",
@@ -165,7 +167,8 @@ export const translations: Record<Language, Translations> = {
     hero: {
       title: "📚 디지털 아카이브",
       description: "한국 문화, 언어, 역사에 관한 {count}권의 도서 컬렉션을 탐색해보세요",
-      searchPlaceholder: "제목, 저자, 코드로 검색..."
+      searchPlaceholder: "제목, 저자, 코드로 검색...",
+      viewLayout: "도서관 배치도 보기"
     },
     filters: {
       filters: "필터",
@@ -234,7 +237,8 @@ export const translations: Record<Language, Translations> = {
     hero: {
       title: "📚 Digital Archive",
       description: "Explore our collection of {count} books about Korean culture, language, and history",
-      searchPlaceholder: "Search by title, author, code..."
+      searchPlaceholder: "Search by title, author, code...",
+      viewLayout: "View Library Layout"
     },
     filters: {
       filters: "Filters",

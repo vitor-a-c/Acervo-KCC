@@ -8,53 +8,140 @@ export default function AboutPage() {
 
   const aboutContent = {
     pt: {
-      title: "Sobre o Centro Cultural Coreano no Brasil",
-      directorMessage: "Mensagem do Diretor",
-      message: `Saudamos calorosamente todos os que nos visitam no Centro Cultural Coreano no Brasil.
-
-Nosso centro cultural foi inaugurado em 2013 em São Paulo como uma instituição oficial do governo da República da Coreia, com o objetivo de ajudar os cidadãos brasileiros a se aproximarem e experimentarem a cultura coreana. Desde a sua fundação, o centro cultural tem oferecido oportunidades para vivenciar e desfrutar dos encantos da cultura coreana por meio de diversas exposições, performances, festivais e cursos.
-
-Em particular, ficamos felizes em saber que recentemente há um grande interesse pela onda coreana no Brasil, um país rico em diversidade e paixão pela cultura. Esse interesse tem se expandido para áreas como música, arte, gastronomia, cinema e literatura, abrangendo tanto tradições quanto aspectos contemporâneos. Em resposta a isso, prometemos nos aproximar ainda mais de vocês com programas mais diversos e enriquecedores.
-
-Além disso, nosso centro cultural tem um grande interesse em colaborar com instituições culturais e artísticas do Brasil. Encorajamos que entrem em contato conosco se tiverem interesse em exposições, performances e outros eventos relacionados à cultura coreana, e esperamos construir intercâmbios culturais frutíferos juntos.
-
-Embora a Coreia e o Brasil estejam geograficamente distantes, esperamos que se tornem países culturalmente próximos. Através do papel do nosso centro cultural como uma plataforma de intercâmbio cultural, desejamos que haja um aumento da empatia e uma profunda amizade entre os cidadãos de ambos os países.`,
-      signature: "Diretor Cheul Hong Kim",
-      date: "09 de junho de 2023",
+      title: "Sobre a Biblioteca Digital",
+      subtitle: "Centro Cultural Coreano no Brasil",
+      welcome: "Bem-vindos à Biblioteca",
+      welcomeText: "A biblioteca do Centro Cultural Coreano no Brasil possui diversos livros, periódicos e materiais multimídia em coreano, português e inglês. Nosso acervo digital oferece uma coleção abrangente sobre cultura, língua, história e literatura coreana.",
+      
+      howToJoin: "Como se Cadastrar",
+      joinStep1: "1. Preencha o formulário de cadastro",
+      joinStep2: "2. Aguarde a aprovação dos dados pela nossa equipe",
+      joinStep3: "3. Após aprovação, você poderá emprestar livros gratuitamente",
+      signUpButton: "Fazer Cadastro",
+      signUpNote: "O cadastro é gratuito e a aprovação está sujeita à validação dos dados pela equipe da biblioteca.",
+      
+      loanRules: "Regras de Empréstimo",
+      generalConditions: "Condições Gerais",
+      condition1: "Empréstimos gratuitos para todos os usuários cadastrados",
+      condition2: "Até 3 livros por usuário simultaneamente",
+      condition3: "Prazo de empréstimo: 21 dias corridos",
+      
+      notAvailable: "Materiais Não Disponíveis para Empréstimo",
+      notAvailableList: [
+        "Materiais em CD, DVD ou mídias digitais",
+        "Obras de consulta local",
+        "Materiais raros ou em processo de restauração"
+      ],
+      
+      renewals: "Renovações",
+      renewalRules: [
+        "Cada empréstimo pode ser renovado uma única vez por mais 21 dias",
+        "Não deve haver reserva por outro usuário",
+        "Solicitação deve ser feita antes do vencimento",
+        "Renovação por e-mail ou presencialmente"
+      ],
+      
+      penalties: "Devoluções e Penalidades",
+      lateReturns: "Atrasos",
+      lateText: "A não devolução no prazo implica em suspensão temporária do direito de empréstimo, proporcional ao tempo de atraso (1 dia de suspensão para cada dia de atraso).",
+      damagesTitle: "Danos ou Perda",
+      damagesText: "O usuário é responsável pela integridade do material emprestado. Em caso de perda, dano ou extravio, o usuário deverá repor o exemplar ou ressarcir o valor estimado.",
+      
+      contact: "Contato da Biblioteca",
+      contactText: "Para dúvidas, renovações ou solicitações:",
+      
       visitWebsite: "Visite nosso site oficial",
       websiteDescription: "Para mais informações sobre nossos programas, eventos e atividades culturais, visite nosso site oficial."
     },
     ko: {
-      title: "주브라질한국문화원 소개",
-      directorMessage: "원장 인사말",
-      message: `주브라질 한국문화원을 찾아주신 여러분을 진심으로 환영합니다.
-
-우리 문화원은 대한민국 공식 정부기관으로서, 브라질 시민 여러분들이 한국의 문화를 보다 가까이 경험하는데 도움을 드리고자 2013년 상파울루에 설립되었습니다. 설립 이래 문화원은 다양한 전시, 공연, 축제, 강좌 등 사업으로 한국 문화의 매력을 체험하고 즐길 수 있는 기회를 제공하고 있습니다.
-
-특별히 기쁘게 생각하는 점은, 다양성과 열정으로 가득한 문화의 나라 브라질에서 최근 한류에 대한 관심이 뜨겁다는 사실입니다. 그 관심은 음악, 미술, 음식, 영화, 문학 등 분야를 넓혀가고 있으며, 전통과 현대를 아우르고 있습니다. 이에 부응하여 우리 문화원은 더욱 다채롭고 깊이 있는 프로그램으로 여러분께 다가갈 것을 약속드립니다.
-
-또한, 우리 문화원은 브라질 문화예술기관과의 협력에도 큰 관심을 가지고 있습니다. 한국 문화 관련 전시, 공연 등에 관심이 있는 기관은 언제든지 연락을 주시기 바라며, 함께 풍성한 문화 교류를 이루어 나갈 수 있기를 기대합니다.
-
-한국과 브라질이 비록 지리적으로는 멀리 떨어져 있지만, 문화적으로는 가까운 나라가 되기를 바랍니다. 문화교류 플랫폼으로서 문화원의 역할을 통해, 양국 시민들의 공감대가 넓어지고 우정이 깊어지기를 소망합니다.`,
-      signature: "김철홍 원장 드림",
-      date: "2023년 6월 9일",
+      title: "디지털 도서관 소개",
+      subtitle: "주브라질한국문화원",
+      welcome: "도서관에 오신 것을 환영합니다",
+      welcomeText: "주브라질한국문화원 도서관은 한국어, 포르투갈어, 영어로 된 다양한 도서, 정기간행물, 멀티미디어 자료를 보유하고 있습니다. 저희 디지털 아카이브는 한국 문화, 언어, 역사, 문학에 대한 포괄적인 컬렉션을 제공합니다.",
+      
+      howToJoin: "가입 방법",
+      joinStep1: "1. 가입 신청서를 작성해 주세요",
+      joinStep2: "2. 도서관 팀의 데이터 승인을 기다려 주세요",
+      joinStep3: "3. 승인 후 무료로 도서를 대출할 수 있습니다",
+      signUpButton: "가입 신청",
+      signUpNote: "가입은 무료이며 승인은 도서관 팀의 데이터 검증에 따라 결정됩니다.",
+      
+      loanRules: "대출 규정",
+      generalConditions: "일반 조건",
+      condition1: "등록된 모든 사용자에게 무료 대출",
+      condition2: "사용자당 동시에 최대 3권까지",
+      condition3: "대출 기간: 21일",
+      
+      notAvailable: "대출 불가 자료",
+      notAvailableList: [
+        "CD, DVD 또는 디지털 미디어 자료",
+        "관내 열람용 도서",
+        "희귀 자료 또는 복원 중인 자료"
+      ],
+      
+      renewals: "연장",
+      renewalRules: [
+        "각 대출은 21일간 한 번만 연장 가능",
+        "다른 사용자의 예약이 없어야 함",
+        "만료일 전에 신청해야 함",
+        "이메일 또는 직접 방문으로 연장 신청"
+      ],
+      
+      penalties: "반납 및 벌칙",
+      lateReturns: "연체",
+      lateText: "기한 내 반납하지 않으면 연체일수에 비례하여 대출 권한이 일시 정지됩니다 (연체 1일당 정지 1일).",
+      damagesTitle: "손상 또는 분실",
+      damagesText: "사용자는 대출한 자료의 온전성에 대해 책임집니다. 분실, 손상, 분실 시 동일한 도서로 교체하거나 도서관이 추산한 가격을 배상해야 합니다.",
+      
+      contact: "도서관 연락처",
+      contactText: "문의, 연장 또는 요청사항:",
+      
       visitWebsite: "공식 웹사이트 방문",
       websiteDescription: "우리의 프로그램, 이벤트 및 문화 활동에 대한 자세한 정보는 공식 웹사이트를 방문해 주세요."
     },
     en: {
-      title: "About Korean Cultural Center in Brazil",
-      directorMessage: "Director's Message",
-      message: `We warmly welcome everyone who visits the Korean Cultural Center in Brazil.
-
-Our cultural center was inaugurated in 2013 in São Paulo as an official institution of the Republic of Korea government, with the aim of helping Brazilian citizens get closer to and experience Korean culture. Since its founding, the cultural center has provided opportunities to experience and enjoy the charms of Korean culture through various exhibitions, performances, festivals, and courses.
-
-We are particularly pleased to know that recently there has been great interest in the Korean Wave in Brazil, a country rich in diversity and passion for culture. This interest has expanded to areas such as music, art, gastronomy, cinema, and literature, encompassing both traditional and contemporary aspects. In response to this, we promise to approach you even more with more diverse and enriching programs.
-
-Furthermore, our cultural center has great interest in collaborating with Brazilian cultural and artistic institutions. We encourage those interested in exhibitions, performances, and other events related to Korean culture to contact us, and we hope to build fruitful cultural exchanges together.
-
-Although Korea and Brazil are geographically distant, we hope they will become culturally close countries. Through the role of our cultural center as a platform for cultural exchange, we wish for increased empathy and deep friendship between the citizens of both countries.`,
-      signature: "Director Cheul Hong Kim",
-      date: "June 9, 2023",
+      title: "About Our Digital Library",
+      subtitle: "Korean Cultural Center in Brazil",
+      welcome: "Welcome to Our Library",
+      welcomeText: "The Korean Cultural Center in Brazil library has various books, periodicals, and multimedia materials in Korean, Portuguese, and English. Our digital archive offers a comprehensive collection about Korean culture, language, history, and literature.",
+      
+      howToJoin: "How to Register",
+      joinStep1: "1. Fill out the registration form",
+      joinStep2: "2. Wait for data approval by our library team",
+      joinStep3: "3. After approval, you can borrow books for free",
+      signUpButton: "Sign Up",
+      signUpNote: "Registration is free and approval is subject to data validation by the library team.",
+      
+      loanRules: "Loan Rules",
+      generalConditions: "General Conditions",
+      condition1: "Free loans for all registered users",
+      condition2: "Up to 3 books per user simultaneously",
+      condition3: "Loan period: 21 days",
+      
+      notAvailable: "Materials Not Available for Loan",
+      notAvailableList: [
+        "Materials on CD, DVD, or digital media",
+        "Reference materials for local consultation",
+        "Rare materials or those under restoration"
+      ],
+      
+      renewals: "Renewals",
+      renewalRules: [
+        "Each loan can be renewed once for another 21 days",
+        "Must not be reserved by another user",
+        "Request must be made before expiration",
+        "Renewal by email or in person"
+      ],
+      
+      penalties: "Returns and Penalties",
+      lateReturns: "Late Returns",
+      lateText: "Failure to return on time results in temporary suspension of borrowing rights, proportional to the delay time (1 day suspension per day of delay).",
+      damagesTitle: "Damage or Loss",
+      damagesText: "The user is responsible for the integrity of borrowed materials. In case of loss, damage, or misplacement, the user must replace the item or compensate the estimated value.",
+      
+      contact: "Library Contact",
+      contactText: "For questions, renewals, or requests:",
+      
       visitWebsite: "Visit Our Official Website",
       websiteDescription: "For more information about our programs, events, and cultural activities, please visit our official website."
     }
@@ -63,77 +150,227 @@ Although Korea and Brazil are geographically distant, we hope they will become c
   const { language } = useLanguage();
   const content = aboutContent[language];
 
-  // Split message into paragraphs for better formatting
-  const messageParagraphs = content.message.split('\n\n').filter(p => p.trim());
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="text-white" style={{background: 'linear-gradient(to right, #053863, #1e40af)'}}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <h1 className="text-4xl font-bold mb-4">
+            <h1 className="text-4xl font-bold mb-2">
               {content.title}
             </h1>
+            <p className="text-xl text-blue-100">
+              {content.subtitle}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-lg shadow-md p-8 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Director's Message */}
-          <section>
-            <h2 className="text-2xl font-bold mb-6" style={{color: '#053863'}}>
-              {content.directorMessage}
-            </h2>
+          {/* Main Library Information */}
+          <div className="lg:col-span-2 space-y-8">
             
-            <div className="space-y-4">
-              {messageParagraphs.map((paragraph, index) => (
-                <p key={index} className="text-gray-700 leading-relaxed text-lg">
-                  {paragraph}
-                </p>
-              ))}
+            {/* Welcome Section */}
+            <div className="bg-white rounded-lg shadow-md p-8">
+              <h2 className="text-2xl font-bold mb-4" style={{color: '#053863'}}>
+                {content.welcome}
+              </h2>
+              <p className="text-gray-700 leading-relaxed text-justify">
+                {content.welcomeText}
+              </p>
             </div>
 
-            {/* Signature */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <div className="text-right">
-                <p className="font-semibold text-gray-900">{content.signature}</p>
-                <p className="text-gray-600 text-sm mt-1">{content.date}</p>
+            {/* How to Join */}
+            <div className="bg-white rounded-lg shadow-md p-8">
+              <h2 className="text-2xl font-bold mb-6" style={{color: '#053863'}}>
+                {content.howToJoin}
+              </h2>
+              
+              <div className="space-y-4 mb-6">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold" style={{backgroundColor: '#053863'}}>
+                    1
+                  </div>
+                  <p className="text-gray-700 pt-1">{content.joinStep1}</p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold" style={{backgroundColor: '#053863'}}>
+                    2
+                  </div>
+                  <p className="text-gray-700 pt-1">{content.joinStep2}</p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold" style={{backgroundColor: '#053863'}}>
+                    3
+                  </div>
+                  <p className="text-gray-700 pt-1">{content.joinStep3}</p>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 pt-6">
+                <a 
+                  href="https://forms.gle/4vZU8H9f8zrXhbyFA"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white hover:opacity-90 transition-opacity mr-4 mb-4"
+                  style={{backgroundColor: '#053863'}}
+                >
+                  📝 {content.signUpButton}
+                </a>
+                <p className="text-sm text-gray-600">
+                  {content.signUpNote}
+                </p>
               </div>
             </div>
-          </section>
 
-          {/* Website Section */}
-          <section className="border-t border-gray-200 pt-8">
-            <h2 className="text-2xl font-bold mb-4" style={{color: '#053863'}}>
-              {content.visitWebsite}
-            </h2>
-            <p className="text-gray-700 leading-relaxed text-lg mb-6">
-              {content.websiteDescription}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <a 
-                href="https://brazil.korean-culture.org/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white hover:opacity-90 transition-opacity"
-                style={{backgroundColor: '#053863'}}
-              >
-                🌐 brazil.korean-culture.org
-              </a>
-              <a 
-                href="/contact"
-                className="inline-flex items-center px-6 py-3 border-2 text-base font-medium rounded-md transition-colors hover:bg-gray-50"
-                style={{borderColor: '#053863', color: '#053863'}}
-              >
-                {t.header.contact}
-              </a>
+            {/* Loan Rules */}
+            <div className="bg-white rounded-lg shadow-md p-8">
+              <h2 className="text-2xl font-bold mb-6" style={{color: '#053863'}}>
+                {content.loanRules}
+              </h2>
+              
+              {/* General Conditions */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3" style={{color: '#053863'}}>
+                  {content.generalConditions}
+                </h3>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <span className="flex-shrink-0 w-2 h-2 rounded-full mt-2 mr-3" style={{backgroundColor: '#053863'}}></span>
+                    <span className="text-gray-700">{content.condition1}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="flex-shrink-0 w-2 h-2 rounded-full mt-2 mr-3" style={{backgroundColor: '#053863'}}></span>
+                    <span className="text-gray-700">{content.condition2}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="flex-shrink-0 w-2 h-2 rounded-full mt-2 mr-3" style={{backgroundColor: '#053863'}}></span>
+                    <span className="text-gray-700">{content.condition3}</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Not Available */}
+              <div className="mb-6 border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold mb-3" style={{color: '#053863'}}>
+                  {content.notAvailable}
+                </h3>
+                <ul className="space-y-2">
+                  {content.notAvailableList.map((item: string, index: number) => (
+                    <li key={index} className="flex items-start">
+                      <span className="flex-shrink-0 w-2 h-2 rounded-full mt-2 mr-3 bg-red-500"></span>
+                      <span className="text-gray-700">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Renewals */}
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold mb-3" style={{color: '#053863'}}>
+                  {content.renewals}
+                </h3>
+                <ul className="space-y-2">
+                  {content.renewalRules.map((rule: string, index: number) => (
+                    <li key={index} className="flex items-start">
+                      <span className="flex-shrink-0 w-2 h-2 rounded-full mt-2 mr-3" style={{backgroundColor: '#053863'}}></span>
+                      <span className="text-gray-700">{rule}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </section>
 
+            {/* Penalties */}
+            <div className="bg-white rounded-lg shadow-md p-8">
+              <h2 className="text-2xl font-bold mb-6" style={{color: '#053863'}}>
+                {content.penalties}
+              </h2>
+              
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-3" style={{color: '#053863'}}>
+                    {content.lateReturns}
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed text-justify">
+                    {content.lateText}
+                  </p>
+                </div>
+                
+                <div className="border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-semibold mb-3" style={{color: '#053863'}}>
+                    {content.damagesTitle}
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed text-justify">
+                    {content.damagesText}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Sidebar - Full width since no director's message */}
+          <div className="lg:col-span-1 space-y-8">
+            
+            {/* Contact */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-2xl font-bold mb-4" style={{color: '#053863'}}>
+                {content.contact}
+              </h2>
+              <p className="text-gray-700 mb-4">
+                {content.contactText}
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <p className="font-medium text-gray-900">E-mail:</p>
+                  <a href="mailto:programas@kccbrazil.com.br" className="hover:underline" style={{color: '#053863'}}>
+                    programas@kccbrazil.com.br
+                  </a>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">{t.footer.hours}:</p>
+                  <div className="text-gray-700 space-y-1 text-sm">
+                    <p>{t.footer.weekdays}</p>
+                    <p>{t.footer.saturday}</p>
+                    <p>{t.footer.sunday}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Website Link */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-bold mb-4" style={{color: '#053863'}}>
+                {content.visitWebsite}
+              </h2>
+              <p className="text-gray-700 mb-4 text-justify">
+                {content.websiteDescription}
+              </p>
+              <div className="space-y-3">
+                <a 
+                  href="https://brazil.korean-culture.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white hover:opacity-90 transition-opacity"
+                  style={{backgroundColor: '#053863'}}
+                >
+                  🌐 brazil.korean-culture.org
+                </a>
+                <a 
+                  href="/contact"
+                  className="block w-full text-center px-4 py-2 border-2 text-sm font-medium rounded-md transition-colors hover:bg-gray-50"
+                  style={{borderColor: '#053863', color: '#053863'}}
+                >
+                  {t.header.contact}
+                </a>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
