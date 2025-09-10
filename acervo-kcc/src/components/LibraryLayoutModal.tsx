@@ -254,6 +254,7 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
   const [selectedShelf, setSelectedShelf] = useState<string | null>(null);
   const [isMobileView, setIsMobileView] = useState(false);
   const [screenWidth, setScreenWidth] = useState(0);
+  const [hoveredShelf, setHoveredShelf] = useState<string | null>(null);
 
   // Handle screen size detection
   useEffect(() => {
@@ -266,7 +267,7 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
     return () => window.removeEventListener('resize', updateScreenSize);
   }, []);
 
-  // Auto-switch to mobile view on small screens
+  // Auto-switch to mobile view on small screens (but allow manual override)
   useEffect(() => {
     if (screenWidth > 0 && screenWidth < 768) {
       setIsMobileView(true);
@@ -283,6 +284,7 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
       highlighted: "Estante destacada",
       selected: "Estante selecionada",
       clickInstruction: "Clique em uma estante para ver detalhes",
+      hoverInstruction: "Passe o mouse sobre uma estante para ver o conteúdo",
       close: "Fechar",
       shelfDetails: "Detalhes da Estante",
       contains: "Contém:",
@@ -298,6 +300,7 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
       highlighted: "강조된 서가",
       selected: "선택된 서가",
       clickInstruction: "자세한 내용을 보려면 서가를 클릭하세요",
+      hoverInstruction: "서가에 마우스를 올려 내용을 확인하세요",
       close: "닫기",
       shelfDetails: "서가 세부사항",
       contains: "포함 내용:",
@@ -313,6 +316,7 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
       highlighted: "Highlighted shelf",
       selected: "Selected shelf",
       clickInstruction: "Click on a shelf to see details",
+      hoverInstruction: "Hover over a shelf to see contents",
       close: "Close",
       shelfDetails: "Shelf Details",
       contains: "Contains:",
@@ -347,6 +351,11 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
   // Handle shelf click
   const handleShelfClick = (shelfId: string) => {
     setSelectedShelf(shelfId);
+  };
+
+  // Handle view toggle - allow manual override even on mobile
+  const handleViewToggle = () => {
+    setIsMobileView(!isMobileView);
   };
 
   // Mobile list view component
@@ -423,10 +432,40 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
       >
       </div>
 
+      {/* Hover tooltip */}
+      {hoveredShelf && (
+        <div 
+          className="absolute z-30 bg-black text-white text-xs rounded-lg px-3 py-2 pointer-events-none shadow-lg max-w-xs"
+          style={{
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <div className="font-bold mb-1">{hoveredShelf}</div>
+          <div>
+            {(() => {
+              const shelf = shelfMapping[hoveredShelf as keyof typeof shelfMapping];
+              if (!shelf) return '';
+              
+              const getCategoryName = (ranges: string[]) => {
+                if (language === 'pt') return ranges[0] || '';
+                if (language === 'en') return ranges[1] || ranges[0] || '';
+                if (language === 'ko') return ranges[2] || ranges[0] || '';
+                return ranges[0] || '';
+              };
+              
+              return getCategoryName(shelf.ranges);
+            })()}
+          </div>
+        </div>
+      )}
+
       {/* Render all shelves */}
       {Object.entries(shelfMapping).map(([shelfId, shelf]) => {
         const isHighlighted = highlightedShelf === shelfId;
         const isSelected = selectedShelf === shelfId;
+        const isHovered = hoveredShelf === shelfId;
         
         // Get the appropriate category name based on language
         const getCategoryName = (ranges: string[]) => {
@@ -437,9 +476,6 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
         };
         
         const categoryName = getCategoryName(shelf.ranges);
-        const displayName = categoryName.length > 18 ? 
-          categoryName.substring(0, 18) + '...' : 
-          categoryName;
         
         return (
           <div
@@ -449,6 +485,8 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
                 ? 'bg-red-200 border-red-500 text-red-800 shadow-lg z-20 scale-105' 
                 : isSelected
                 ? 'bg-blue-200 border-blue-500 text-blue-800 shadow-lg z-20 scale-105'
+                : isHovered
+                ? 'bg-yellow-100 border-yellow-500 text-yellow-800 shadow-lg z-20 scale-105'
                 : 'bg-white border-gray-600 text-gray-700 hover:bg-gray-100 hover:border-gray-800'
             }`}
             style={shelf.position}
@@ -457,15 +495,10 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
               e.stopPropagation();
               handleShelfClick(shelfId);
             }}
+            onMouseEnter={() => setHoveredShelf(shelfId)}
+            onMouseLeave={() => setHoveredShelf(null)}
           >
-            <div className="font-bold text-center mb-1">{shelfId}</div>
-            <div className="text-center leading-tight px-1 text-xs">
-              {displayName.split('•').map((part, idx) => (
-                <div key={idx} className="truncate" style={{fontSize: '9px', lineHeight: '1.0'}}>
-                  {part.trim()}
-                </div>
-              ))}
-            </div>
+            <div className="font-bold text-center text-sm">{shelfId}</div>
           </div>
         );
       })}
@@ -602,9 +635,9 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
             <p className="text-gray-600 mt-1">{content.subtitle}</p>
           </div>
           <div className="flex items-center space-x-2">
-            {/* View Toggle */}
+            {/* View Toggle - Always allow manual override */}
             <button
-              onClick={() => setIsMobileView(!isMobileView)}
+              onClick={handleViewToggle}
               className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
             >
               {isMobileView ? content.switchToDesktop : content.switchToMobile}
@@ -623,16 +656,18 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
 
         {/* Content */}
         <div className="p-6">
-          {/* Mobile note */}
-          <div className="lg:hidden mb-4 bg-blue-50 rounded-lg p-3 border border-blue-200">
-            <div className="flex items-start space-x-2">
-              <span className="text-blue-600 text-sm">📱</span>
-              <p className="text-sm text-blue-800">{content.mobileNote}</p>
+          {/* Mobile note - only show when automatically set to mobile view */}
+          {screenWidth < 768 && (
+            <div className="mb-4 bg-blue-50 rounded-lg p-3 border border-blue-200">
+              <div className="flex items-start space-x-2">
+                <span className="text-blue-600 text-sm">📱</span>
+                <p className="text-sm text-blue-800">{content.mobileNote}</p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Render appropriate view */}
-          {isMobileView || screenWidth < 768 ? <MobileShelfList /> : <DesktopLayoutView />}
+          {isMobileView ? <MobileShelfList /> : <DesktopLayoutView />}
         </div>
 
         {/* Legend */}
@@ -641,7 +676,11 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-white border-2 border-gray-600 rounded"></div>
-              <span>Estantes normais / 일반 서가 / Regular shelves</span>
+              <span>
+                {language === 'pt' ? 'Estantes' : 
+                 language === 'ko' ? '서가' : 
+                 'Shelves'}
+              </span>
             </div>
             {highlightedShelf && (
               <div className="flex items-center space-x-2">
@@ -655,22 +694,28 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
                 <span>{content.selected}</span>
               </div>
             )}
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-blue-50 border border-blue-200 rounded"></div>
-              <span>
-                {language === 'pt' ? 'Parede Principal' : 
-                 language === 'ko' ? '주요 벽면' : 
-                 'Main Wall'}
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-green-50 border border-green-200 rounded"></div>
-              <span>
-                {language === 'pt' ? 'Parede Secundária' : 
-                 language === 'ko' ? '보조 벽면' : 
-                 'Secondary Wall'}
-              </span>
-            </div>
+            
+            {/* Only show wall info in desktop view */}
+            {!isMobileView && (
+              <>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-blue-50 border border-blue-200 rounded"></div>
+                  <span>
+                    {language === 'pt' ? 'Parede Principal' : 
+                     language === 'ko' ? '주요 벽면' : 
+                     'Main Wall'}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-green-50 border border-green-200 rounded"></div>
+                  <span>
+                    {language === 'pt' ? 'Parede Secundária' : 
+                     language === 'ko' ? '보조 벽면' : 
+                     'Secondary Wall'}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
           
           {/* Additional info */}
@@ -681,6 +726,9 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
                'Tap on a shelf to see details') :
               content.clickInstruction}
             </p>
+            {!isMobileView && (
+              <p className="mt-1">{content.hoverInstruction}</p>
+            )}
             <p className="mt-1">
               <strong>
                 {language === 'pt' ? 'Organização:' : 

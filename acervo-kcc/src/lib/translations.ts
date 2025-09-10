@@ -95,8 +95,8 @@ export const translations: Record<Language, Translations> = {
       contact: "Contato"
     },
     hero: {
-      title: "📚 Acervo Digital",
-      description: "Explore nosso acervo de {count} livros sobre cultura, língua e história coreana",
+      title: "Acervo Digital",
+      description: "Consulte de forma online o nosso acervo de {count} livros e materiais multimídia",
       searchPlaceholder: "Buscar por título, autor, código...",
       viewLayout: "Ver Layout da Biblioteca"
     },
@@ -108,7 +108,7 @@ export const translations: Record<Language, Translations> = {
       subtheme: "Subtema",
       allSubthemes: "Todos os subtemas",
       sejongLevel: "Nível Sejong / Idioma",
-      allLevels: "Todos os níveis",
+      allLevels: "Todos os níveis / idiomas",
       onlyAvailable: "Apenas disponíveis",
       clearFilters: "Limpar filtros",
       booksFound: "livros encontrados",
@@ -122,7 +122,7 @@ export const translations: Record<Language, Translations> = {
       location: "Local:",
       theme: "Tema:",
       unknownTheme: "Tema desconhecido",
-      return: "Retorno:",
+      return: "Retorno estimado:",
       available: "Disponível",
       borrowed: "Emprestado",
       unavailable: "Indisponível"
@@ -147,7 +147,7 @@ export const translations: Record<Language, Translations> = {
         aboutKcc: "Centro Cultural Coreano no Brasil",
         aboutDescription: "Promovendo a cultura coreana no Brasil através da educação, arte e intercâmbio cultural.",
         contact: "Contato",
-        hours: "Horário de Funcionamento",
+        hours: "Horário de Funcionamento da Biblioteca",
         weekdays: "Terça a Sexta: 10h às 18h",
         saturday: "Sábado: 10h às 18h30 (intervalo para almoço 12h às 13h)",
         sunday: "Domingo: Fechado",
@@ -165,8 +165,8 @@ export const translations: Record<Language, Translations> = {
       contact: "연락처"
     },
     hero: {
-      title: "📚 디지털 아카이브",
-      description: "한국 문화, 언어, 역사에 관한 {count}권의 도서 컬렉션을 탐색해보세요",
+      title: "디지털 아카이브",
+      description: "온라인으로 {count}권의 도서 및 멀티미디어 자료를 확인해보세요",
       searchPlaceholder: "제목, 저자, 코드로 검색...",
       viewLayout: "도서관 배치도 보기"
     },
@@ -178,7 +178,7 @@ export const translations: Record<Language, Translations> = {
       subtheme: "하위 주제",
       allSubthemes: "모든 하위 주제",
       sejongLevel: "세종 레벨 / 언어",
-      allLevels: "모든 레벨",
+      allLevels: "모든 레벨 / 언어",
       onlyAvailable: "대출 가능한 도서만",
       clearFilters: "필터 초기화",
       booksFound: "권의 도서를 찾았습니다",
@@ -192,7 +192,7 @@ export const translations: Record<Language, Translations> = {
       location: "위치:",
       theme: "주제:",
       unknownTheme: "알 수 없는 주제",
-      return: "반납:",
+      return: "반납 예정일:",
       available: "대출 가능",
       borrowed: "대출 중",
       unavailable: "대출 불가"
@@ -217,7 +217,7 @@ export const translations: Record<Language, Translations> = {
         aboutKcc: "주브라질한국문화원",
         aboutDescription: "교육, 예술, 문화 교류를 통해 브라질에서 한국 문화를 홍보합니다.",
         contact: "연락처",
-        hours: "운영 시간",
+        hours: "도서실 운영 시간",
         weekdays: "화~금: 10시~18시",
         saturday: "토: 10시~18시30분 (점심시간 12시~13시)",
         sunday: "일: 휴관",
@@ -235,8 +235,8 @@ export const translations: Record<Language, Translations> = {
       contact: "Contact"
     },
     hero: {
-      title: "📚 Digital Archive",
-      description: "Explore our collection of {count} books about Korean culture, language, and history",
+      title: "Digital Archive",
+      description: "Explore our collection of {count} books and multimedia materials online",
       searchPlaceholder: "Search by title, author, code...",
       viewLayout: "View Library Layout"
     },
@@ -248,7 +248,7 @@ export const translations: Record<Language, Translations> = {
       subtheme: "Subtheme",
       allSubthemes: "All subthemes",
       sejongLevel: "Sejong Level / Language",
-      allLevels: "All levels",
+      allLevels: "All levels / languages",
       onlyAvailable: "Available only",
       clearFilters: "Clear filters",
       booksFound: "books found",
@@ -262,7 +262,7 @@ export const translations: Record<Language, Translations> = {
       location: "Location:",
       theme: "Theme:",
       unknownTheme: "Unknown theme",
-      return: "Return:",
+      return: "Expected return date:",
       available: "Available",
       borrowed: "Borrowed",
       unavailable: "Unavailable"
@@ -287,7 +287,7 @@ export const translations: Record<Language, Translations> = {
         aboutKcc: "Korean Cultural Center in Brazil",
         aboutDescription: "Promoting Korean culture in Brazil through education, arts, and cultural exchange.",
         contact: "Contact",
-        hours: "Opening Hours",
+        hours: "Library Opening Hours",
         weekdays: "Tuesday to Friday: 10am to 6pm",
         saturday: "Saturday: 10am to 6:30pm (lunch break 12pm to 1pm)",
         sunday: "Sunday: Closed",

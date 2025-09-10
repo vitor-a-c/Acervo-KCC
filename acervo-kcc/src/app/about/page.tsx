@@ -8,8 +8,7 @@ export default function AboutPage() {
 
   const aboutContent = {
     pt: {
-      title: "Sobre a Biblioteca Digital",
-      subtitle: "Centro Cultural Coreano no Brasil",
+      title: "Sobre a Biblioteca",
       welcome: "Bem-vindos à Biblioteca",
       welcomeText: "A biblioteca do Centro Cultural Coreano no Brasil possui diversos livros, periódicos e materiais multimídia em coreano, português e inglês. Nosso acervo digital oferece uma coleção abrangente sobre cultura, língua, história e literatura coreana.",
       
@@ -54,8 +53,7 @@ export default function AboutPage() {
       websiteDescription: "Para mais informações sobre nossos programas, eventos e atividades culturais, visite nosso site oficial."
     },
     ko: {
-      title: "디지털 도서관 소개",
-      subtitle: "주브라질한국문화원",
+      title: "도서관 소개",
       welcome: "도서관에 오신 것을 환영합니다",
       welcomeText: "주브라질한국문화원 도서관은 한국어, 포르투갈어, 영어로 된 다양한 도서, 정기간행물, 멀티미디어 자료를 보유하고 있습니다. 저희 디지털 아카이브는 한국 문화, 언어, 역사, 문학에 대한 포괄적인 컬렉션을 제공합니다.",
       
@@ -100,8 +98,7 @@ export default function AboutPage() {
       websiteDescription: "우리의 프로그램, 이벤트 및 문화 활동에 대한 자세한 정보는 공식 웹사이트를 방문해 주세요."
     },
     en: {
-      title: "About Our Digital Library",
-      subtitle: "Korean Cultural Center in Brazil",
+      title: "About Our Library",
       welcome: "Welcome to Our Library",
       welcomeText: "The Korean Cultural Center in Brazil library has various books, periodicals, and multimedia materials in Korean, Portuguese, and English. Our digital archive offers a comprehensive collection about Korean culture, language, history, and literature.",
       
@@ -159,9 +156,6 @@ export default function AboutPage() {
             <h1 className="text-4xl font-bold mb-2">
               {content.title}
             </h1>
-            <p className="text-xl text-blue-100">
-              {content.subtitle}
-            </p>
           </div>
         </div>
       </div>

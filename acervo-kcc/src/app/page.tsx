@@ -1,4 +1,3 @@
-// src/app/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -197,7 +196,7 @@ export default function HomePage() {
             <h1 className="text-4xl font-bold mb-4">
               {t.hero.title}
             </h1>
-            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
               {formatString(t.hero.description, { count: books.length.toString() })}
             </p>
             
