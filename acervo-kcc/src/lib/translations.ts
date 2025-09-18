@@ -83,6 +83,36 @@ export interface Translations {
     closed: string;
     rights: string;
   };
+  
+  // Admin Section
+  admin: {
+    title: string;
+    login: {
+      title: string;
+      subtitle: string;
+      password: string;
+      loginButton: string;
+      invalidPassword: string;
+    };
+    upload: {
+      title: string;
+      dropzone: string;
+      dropzoneHint: string;
+      fileSelected: string;
+      preview: string;
+      uploadButton: string;
+      processing: string;
+      clearButton: string;
+      results: {
+        title: string;
+        total: string;
+        processed: string;
+        added: string;
+        updated: string;
+        errors: string;
+      };
+    };
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -153,7 +183,35 @@ export const translations: Record<Language, Translations> = {
         sunday: "Domingo: Fechado",
         rights: "2025 Centro Cultural Coreano no Brasil.",
         closed: ""
+    },
+    admin: {
+  title: "Administração da Biblioteca",
+  login: {
+    title: "Acesso Administrativo",
+    subtitle: "Digite a senha para continuar",
+    password: "Senha",
+    loginButton: "Entrar",
+    invalidPassword: "Senha inválida"
+  },
+  upload: {
+    title: "Upload de CSV da Biblioteca",
+    dropzone: "Arraste o arquivo CSV aqui ou clique para selecionar",
+    dropzoneHint: "Suporta arquivos CSV com codificação UTF-8",
+    fileSelected: "Arquivo selecionado",
+    preview: "Prévia (Primeiras 5 linhas)",
+    uploadButton: "Enviar CSV",
+    processing: "Processando...",
+    clearButton: "Limpar",
+    results: {
+      title: "Resultados do Upload",
+      total: "Total de Registros:",
+      processed: "Processados:",
+      added: "Novos Livros Adicionados:",
+      updated: "Livros Atualizados:",
+      errors: "Erros"
     }
+  }
+}
   },
   
   ko: {
@@ -223,7 +281,35 @@ export const translations: Record<Language, Translations> = {
         sunday: "일: 휴관",
         rights: "2025 주브라질한국문화원.",
         closed: ""
+    },
+    admin: {
+  title: "도서관 관리",
+  login: {
+    title: "관리자 접속",
+    subtitle: "계속하려면 비밀번호를 입력하세요",
+    password: "비밀번호",
+    loginButton: "로그인",
+    invalidPassword: "잘못된 비밀번호"
+  },
+  upload: {
+    title: "도서관 CSV 업로드",
+    dropzone: "CSV 파일을 여기에 놓거나 클릭하여 선택하세요",
+    dropzoneHint: "UTF-8 인코딩 CSV 파일 지원",
+    fileSelected: "선택된 파일",
+    preview: "미리보기 (처음 5줄)",
+    uploadButton: "CSV 업로드",
+    processing: "처리 중...",
+    clearButton: "지우기",
+    results: {
+      title: "업로드 결과",
+      total: "전체 레코드:",
+      processed: "처리됨:",
+      added: "추가된 새 도서:",
+      updated: "업데이트된 도서:",
+      errors: "오류"
     }
+  }
+  }
   },
   
   en: {
@@ -293,7 +379,35 @@ export const translations: Record<Language, Translations> = {
         sunday: "Sunday: Closed",
         rights: "2025 Korean Cultural Center in Brazil.",
         closed: ""
+    },
+    admin: {
+  title: "Library Administration",
+  login: {
+    title: "Admin Access",
+    subtitle: "Enter password to continue",
+    password: "Password",
+    loginButton: "Login",
+    invalidPassword: "Invalid password"
+  },
+  upload: {
+    title: "Library CSV Upload",
+    dropzone: "Drop CSV file here or click to select",
+    dropzoneHint: "Supports CSV files with UTF-8 encoding",
+    fileSelected: "File selected",
+    preview: "Preview (First 5 rows)",
+    uploadButton: "Upload CSV",
+    processing: "Processing...",
+    clearButton: "Clear",
+    results: {
+      title: "Upload Results",
+      total: "Total Records:",
+      processed: "Processed:",
+      added: "New Books Added:",
+      updated: "Books Updated:",
+      errors: "Errors"
     }
+  }
+}
   }
 };
 
