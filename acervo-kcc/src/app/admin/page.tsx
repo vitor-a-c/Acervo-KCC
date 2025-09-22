@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Papa from 'papaparse';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface UploadStatus {
   total: number;
@@ -13,13 +12,16 @@ interface UploadStatus {
   errors: string[];
 }
 
+interface CSVRow {
+  [key: string]: string | number | undefined;
+}
+
 export default function AdminPage() {
-  const { t, language } = useLanguage();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [uploadStatus, setUploadStatus] = useState<UploadStatus | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [csvPreview, setCsvPreview] = useState<any[]>([]);
+  const [csvPreview, setCsvPreview] = useState<CSVRow[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Handle authentication
@@ -40,31 +42,45 @@ export default function AdminPage() {
       } else {
         alert('Invalid password');
       }
-    } catch (error) {
+    } catch {
       alert('Authentication error');
     }
   };
 
   // Handle CSV file drop
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
 
     setSelectedFile(file);
     
-    // Parse CSV for preview
-    Papa.parse(file, {
-      encoding: 'UTF-8',
-      header: true,
-      preview: 5,
-      complete: (results) => {
-        setCsvPreview(results.data);
-      },
-      error: (error) => {
-        console.error('CSV parsing error:', error);
-        alert('Error reading CSV file');
+    try {
+      // Read file content as text
+      const text = await file.text();
+      
+      // Parse CSV for preview
+      const parseResult = Papa.parse<CSVRow>(text, {
+        header: true,
+        preview: 5,
+        skipEmptyLines: true,
+        dynamicTyping: true
+      });
+      
+      if (parseResult.errors && parseResult.errors.length > 0) {
+        console.error('CSV parsing errors:', parseResult.errors);
+        // Only show alert for critical errors
+        const criticalErrors = parseResult.errors.filter(e => e.type === 'Quotes' || e.type === 'FieldMismatch');
+        if (criticalErrors.length > 0) {
+          alert('Error reading CSV file: ' + criticalErrors[0].message);
+          return;
+        }
       }
-    });
+      
+      setCsvPreview(parseResult.data);
+    } catch (error) {
+      console.error('Error reading file:', error);
+      alert('Error reading CSV file');
+    }
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -215,9 +231,9 @@ export default function AdminPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {csvPreview.map((row, idx) => (
                       <tr key={idx}>
-                        {Object.values(row).slice(0, 6).map((val: any, i) => (
+                        {Object.values(row).slice(0, 6).map((val: string | number | undefined, i) => (
                           <td key={i} className="px-4 py-2 text-gray-700">
-                            {val || '-'}
+                            {val?.toString() || '-'}
                           </td>
                         ))}
                         <td className="px-4 py-2 text-gray-400">...</td>

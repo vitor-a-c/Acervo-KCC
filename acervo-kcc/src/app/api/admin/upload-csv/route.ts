@@ -5,7 +5,12 @@ import jwt from 'jsonwebtoken';
 import { BookDocument, CSV_COLUMN_MAPPING, isBookBorrowed, extractKdcCode } from '@/types/database';
 import { getDetailedTheme } from '@/utils/hybridKdcUtils';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+// Ensure JWT_SECRET is set
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Verify admin token
 function verifyToken(token: string): boolean {
@@ -15,6 +20,11 @@ function verifyToken(token: string): boolean {
   } catch {
     return false;
   }
+}
+
+// Define the shape of CSV row data
+interface CSVRow {
+  [key: string]: string | number | undefined;
 }
 
 export async function POST(request: NextRequest) {
@@ -43,38 +53,24 @@ export async function POST(request: NextRequest) {
 
     // Read file content as UTF-8 text
     const text = await file.text();
-
-    const parseResult = await new Promise<Papa.ParseResult<any>>((resolve) => {
-      Papa.parse(text, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          resolve(results);
-        },
-        error: (error: Papa.ParseError) => {
-          console.error('CSV parsing error:', error);
-          resolve({ 
-            data: [], 
-            errors: [error], 
-            meta: {
-              delimiter: "",
-              linebreak: "",
-              aborted: false,
-              truncated: false,
-              cursor: 0,
-              fields: []
-            }
-          });
-        }
-      });
+    
+    // Parse CSV synchronously
+    const parseResult = Papa.parse<CSVRow>(text, {
+      header: true,
+      skipEmptyLines: true,
+      dynamicTyping: true,
+      delimitersToGuess: [',', '\t', '|', ';', Papa.RECORD_SEP, Papa.UNIT_SEP]
     });
 
-    if (parseResult.errors.length > 0) {
-      console.error('CSV parsing errors:', parseResult.errors);
-      return NextResponse.json(
-        { message: 'CSV parsing failed', errors: parseResult.errors },
-        { status: 400 }
-      );
+    if (parseResult.errors && parseResult.errors.length > 0) {
+      // Only fail if there are critical errors
+      const criticalErrors = parseResult.errors.filter(e => e.type === 'Quotes' || e.type === 'FieldMismatch');
+      if (criticalErrors.length > 0) {
+        return NextResponse.json(
+          { message: 'CSV parsing failed', errors: criticalErrors },
+          { status: 400 }
+        );
+      }
     }
 
     const csvData = parseResult.data;
@@ -110,11 +106,11 @@ export async function POST(request: NextRequest) {
             
             // Type conversion based on field
             if (dbField === 'numero_sequencial' || dbField === 'ano_publicacao') {
-              (bookData as any)[dbField] = parseInt(value) || 0;
+              (bookData as Record<string, unknown>)[dbField] = parseInt(String(value)) || 0;
             } else if (dbField === 'preco') {
-              (bookData as any)[dbField] = parseFloat(value) || 0;
+              (bookData as Record<string, unknown>)[dbField] = parseFloat(String(value)) || 0;
             } else {
-              (bookData as any)[dbField] = value?.toString() || '';
+              (bookData as Record<string, unknown>)[dbField] = value?.toString() || '';
             }
           }
         }
@@ -172,7 +168,6 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         const errorMsg = `Row ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`;
         stats.errors.push(errorMsg);
-        console.error(errorMsg);
       }
     }
 

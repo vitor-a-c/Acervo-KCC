@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD 
-  ? bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10)
-  : bcrypt.hashSync('admin123', 10); // Default for development
+// Ensure required environment variables are set
+if (!process.env.ADMIN_PASSWORD) {
+  throw new Error('ADMIN_PASSWORD environment variable is required');
+}
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+
+// Hash the admin password once at startup
+const ADMIN_PASSWORD_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10);
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +37,7 @@ export async function POST(request: NextRequest) {
     );
 
     return NextResponse.json({ token });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { message: 'Authentication error' },
       { status: 500 }

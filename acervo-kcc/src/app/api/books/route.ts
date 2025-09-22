@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { BookDocument } from '@/types/database';
 import { Book } from '@/types/book';
@@ -20,7 +20,7 @@ function documentToBook(doc: BookDocument): Book {
   };
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const db = await getDatabase();
     const collection = db.collection<BookDocument>('books');
