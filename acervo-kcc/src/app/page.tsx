@@ -393,7 +393,7 @@ export default function HomePage() {
               const kdcCode = extractKdcCode(book['Número chamada'] || '');
               const themeName = kdcCode ? getDetailedTheme(kdcCode, language) : t.book.unknownTheme;
               
-              // Check if it's a Korean language level (for flag emoji)
+              // Check if it's a Korean language level
               const isKoreanLevel = book['Recomendação nível Sejong'] && 
                 !['Português', 'Inglês (English)'].includes(book['Recomendação nível Sejong']);
 
@@ -421,7 +421,11 @@ export default function HomePage() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="block font-medium text-gray-700 mb-1">{t.book.code}</span>
-                      <span className="text-gray-900 font-mono text-xs">{book['Código']}</span>
+                      <span className="text-gray-900 font-mono text-xs">
+                      {book['Código']
+                        ? `${book['Código'].slice(0, 2)}${book['Código'].slice(-4)}`
+                        : ''}
+                      </span>
                     </div>
                     <div>
                       <span className="block font-medium text-gray-700 mb-1">{t.book.callNumber}</span>

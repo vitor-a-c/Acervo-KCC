@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { BookDocument } from '@/types/database';
 import BookEditModal from './BookEditModal';
+import DeleteConfirmModal from './DeleteConfirmModal';
+import { formatBookCode } from '@/utils/bookUtils';
 
 interface BookTableProps {
   token: string | null;
@@ -27,7 +29,9 @@ export default function BookTable({ token }: BookTableProps) {
   });
   const [editingBook, setEditingBook] = useState<BookDocument | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deletingBook, setDeletingBook] = useState<BookDocument | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Fetch books
   const fetchBooks = async (page = 1, search = '') => {
@@ -60,22 +64,27 @@ export default function BookTable({ token }: BookTableProps) {
     }
   }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-hide success message
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchBooks(1, searchTerm);
   };
 
-  // Handle delete
-  const handleDelete = async (codigo: string) => {
-    if (!deleteConfirm || deleteConfirm !== codigo) {
-      setDeleteConfirm(codigo);
-      setTimeout(() => setDeleteConfirm(null), 3000);
-      return;
-    }
-
+  // Handle delete confirmation
+  const handleDeleteConfirm = async () => {
+    if (!deletingBook) return;
+    
+    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/admin/books/${encodeURIComponent(codigo)}`, {
+      const response = await fetch(`/api/admin/books/${encodeURIComponent(deletingBook.codigo)}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -83,11 +92,17 @@ export default function BookTable({ token }: BookTableProps) {
       });
 
       if (response.ok) {
+        setSuccessMessage(`Book "${deletingBook.titulo}" deleted successfully`);
         fetchBooks(pagination.page, searchTerm);
-        setDeleteConfirm(null);
+        setDeletingBook(null);
+      } else {
+        alert('Failed to delete book');
       }
     } catch (error) {
       console.error('Error deleting book:', error);
+      alert('Error deleting book');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -96,6 +111,7 @@ export default function BookTable({ token }: BookTableProps) {
     fetchBooks(pagination.page, searchTerm);
     setEditingBook(null);
     setIsAddModalOpen(false);
+    setSuccessMessage('Book saved successfully');
   };
 
   if (loading && books.length === 0) {
@@ -109,6 +125,16 @@ export default function BookTable({ token }: BookTableProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          {successMessage}
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
@@ -165,7 +191,9 @@ export default function BookTable({ token }: BookTableProps) {
           <tbody className="bg-white divide-y divide-gray-200">
             {books.map((book) => (
               <tr key={book.codigo} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-sm font-mono">{book.codigo}</td>
+                <td className="px-4 py-3 text-sm font-mono" title={book.codigo}>
+                  {formatBookCode(book.codigo)}
+                </td>
                 <td className="px-4 py-3 text-sm">{book.titulo}</td>
                 <td className="px-4 py-3 text-sm">{book.autor}</td>
                 <td className="px-4 py-3 text-sm">{book.posicao}</td>
@@ -186,14 +214,10 @@ export default function BookTable({ token }: BookTableProps) {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(book.codigo)}
-                    className={`${
-                      deleteConfirm === book.codigo 
-                        ? 'text-red-600 font-bold' 
-                        : 'text-red-600 hover:text-red-800'
-                    }`}
+                    onClick={() => setDeletingBook(book)}
+                    className="text-red-600 hover:text-red-800"
                   >
-                    {deleteConfirm === book.codigo ? 'Confirm?' : 'Delete'}
+                    Delete
                   </button>
                 </td>
               </tr>
@@ -249,6 +273,17 @@ export default function BookTable({ token }: BookTableProps) {
           token={token}
           onClose={() => setIsAddModalOpen(false)}
           onSave={handleSave}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingBook && (
+        <DeleteConfirmModal
+          bookCode={formatBookCode(deletingBook.codigo)}
+          bookTitle={deletingBook.titulo}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeletingBook(null)}
+          isDeleting={isDeleting}
         />
       )}
     </div>

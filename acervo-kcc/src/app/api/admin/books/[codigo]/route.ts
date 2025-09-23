@@ -3,7 +3,7 @@ import { getDatabase } from '@/lib/mongodb';
 import { BookDocument } from '@/types/database';
 import jwt from 'jsonwebtoken';
 
-// Verify JWT token (reuse from above)
+// Verify JWT token
 function verifyAuth(request: NextRequest): boolean {
   const authHeader = request.headers.get('authorization');
   const token = authHeader?.replace('Bearer ', '');
