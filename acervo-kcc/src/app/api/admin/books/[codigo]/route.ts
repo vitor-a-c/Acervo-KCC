@@ -3,15 +3,22 @@ import { getDatabase } from '@/lib/mongodb';
 import { BookDocument } from '@/types/database';
 import jwt from 'jsonwebtoken';
 
+// Ensure JWT_SECRET is set
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
 // Verify JWT token
 function verifyAuth(request: NextRequest): boolean {
   const authHeader = request.headers.get('authorization');
   const token = authHeader?.replace('Bearer ', '');
   
-  if (!token || !process.env.JWT_SECRET) return false;
+  if (!token) return false;
   
   try {
-    jwt.verify(token, process.env.JWT_SECRET);
+    jwt.verify(token, JWT_SECRET);
     return true;
   } catch {
     return false;
@@ -21,7 +28,7 @@ function verifyAuth(request: NextRequest): boolean {
 // PUT - Update book
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { codigo: string } }
+  { params }: { params: Promise<{ codigo: string }> }
 ) {
   if (!verifyAuth(request)) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -29,7 +36,7 @@ export async function PUT(
 
   try {
     const bookData: Partial<BookDocument> = await request.json();
-    const { codigo } = params;
+    const { codigo } = await params; // Await params here
 
     const db = await getDatabase();
     const collection = db.collection<BookDocument>('books');
@@ -56,7 +63,7 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating book:', error);
     return NextResponse.json(
-      { message: 'Error updating book' },
+      { message: 'Error updating book', error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -65,14 +72,14 @@ export async function PUT(
 // DELETE - Delete book
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { codigo: string } }
+  { params }: { params: Promise<{ codigo: string }> }
 ) {
   if (!verifyAuth(request)) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const { codigo } = params;
+    const { codigo } = await params; // Await params here
 
     const db = await getDatabase();
     const collection = db.collection<BookDocument>('books');
@@ -90,7 +97,7 @@ export async function DELETE(
   } catch (error) {
     console.error('Error deleting book:', error);
     return NextResponse.json(
-      { message: 'Error deleting book' },
+      { message: 'Error deleting book', error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
