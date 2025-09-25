@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { BookDocument } from '@/types/database';
 import BookEditModal from './BookEditModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import BulkActionsBar from './BulkActionsBar';
+import BulkEditModal from './BulkEditModal';
+import PasteCodesModal from './PasteCodesModal';
 import { formatBookCode } from '@/utils/bookUtils';
 
 interface BookTableProps {
@@ -32,6 +35,13 @@ export default function BookTable({ token }: BookTableProps) {
   const [deletingBook, setDeletingBook] = useState<BookDocument | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // Selection state
+  const [selectedBooks, setSelectedBooks] = useState<Set<string>>(new Set());
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [showPasteCodes, setShowPasteCodes] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
   // Fetch books
   const fetchBooks = async (page = 1, search = '') => {
@@ -78,7 +88,106 @@ export default function BookTable({ token }: BookTableProps) {
     fetchBooks(1, searchTerm);
   };
 
-  // Handle delete confirmation
+  // Handle selection
+  const toggleSelection = (codigo: string) => {
+    const newSelection = new Set(selectedBooks);
+    if (newSelection.has(codigo)) {
+      newSelection.delete(codigo);
+    } else {
+      newSelection.add(codigo);
+    }
+    setSelectedBooks(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedBooks.size === books.length) {
+      setSelectedBooks(new Set());
+    } else {
+      setSelectedBooks(new Set(books.map(book => book.codigo)));
+    }
+  };
+
+  // Handle paste codes
+  const handlePasteCodes = (codes: string[]) => {
+    const newSelection = new Set<string>();
+    codes.forEach(code => {
+      const book = books.find(b => b.codigo === code);
+      if (book) {
+        newSelection.add(book.codigo);
+      }
+    });
+    setSelectedBooks(newSelection);
+    setShowPasteCodes(false);
+    setSuccessMessage(`${newSelection.size} books selected from pasted codes`);
+  };
+
+  // Handle bulk edit
+  const handleBulkEdit = async (field: string, value: string | boolean) => {
+    setIsBulkProcessing(true);
+    try {
+      const response = await fetch('/api/admin/books/bulk', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          codes: Array.from(selectedBooks),
+          field,
+          value
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setSuccessMessage(result.message);
+        fetchBooks(pagination.page, searchTerm);
+        setSelectedBooks(new Set());
+        setShowBulkEdit(false);
+      } else {
+        alert('Failed to update books');
+      }
+    } catch (error) {
+      console.error('Error updating books:', error);
+      alert('Error updating books');
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  // Handle bulk delete
+  const handleBulkDeleteConfirm = async () => {
+    setIsBulkProcessing(true);
+    try {
+      const response = await fetch('/api/admin/books/bulk', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          codes: Array.from(selectedBooks)
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setSuccessMessage(result.message);
+        fetchBooks(pagination.page, searchTerm);
+        setSelectedBooks(new Set());
+        setShowBulkDelete(false);
+      } else {
+        alert('Failed to delete books');
+      }
+    } catch (error) {
+      console.error('Error deleting books:', error);
+      alert('Error deleting books');
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  // Handle single delete
   const handleDeleteConfirm = async () => {
     if (!deletingBook) return;
     
@@ -106,7 +215,7 @@ export default function BookTable({ token }: BookTableProps) {
     }
   };
 
-  // Handle save (from modal)
+  // Handle save
   const handleSave = () => {
     fetchBooks(pagination.page, searchTerm);
     setEditingBook(null);
@@ -175,11 +284,28 @@ export default function BookTable({ token }: BookTableProps) {
         </form>
       </div>
 
+      {/* Bulk Actions Bar */}
+      <BulkActionsBar
+        selectedCount={selectedBooks.size}
+        onEdit={() => setShowBulkEdit(true)}
+        onDelete={() => setShowBulkDelete(true)}
+        onClear={() => setSelectedBooks(new Set())}
+        onPasteCodes={() => setShowPasteCodes(true)}
+      />
+
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-4 py-3 text-left">
+                <input
+                  type="checkbox"
+                  checked={books.length > 0 && selectedBooks.size === books.length}
+                  onChange={toggleSelectAll}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+              </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Author</th>
@@ -190,7 +316,15 @@ export default function BookTable({ token }: BookTableProps) {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {books.map((book) => (
-              <tr key={book.codigo} className="hover:bg-gray-50">
+              <tr key={book.codigo} className={`hover:bg-gray-50 ${selectedBooks.has(book.codigo) ? 'bg-blue-50' : ''}`}>
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedBooks.has(book.codigo)}
+                    onChange={() => toggleSelection(book.codigo)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                </td>
                 <td className="px-4 py-3 text-sm font-mono" title={book.codigo}>
                   {formatBookCode(book.codigo)}
                 </td>
@@ -256,7 +390,7 @@ export default function BookTable({ token }: BookTableProps) {
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* Modals */}
       {editingBook && (
         <BookEditModal
           book={editingBook}
@@ -266,7 +400,6 @@ export default function BookTable({ token }: BookTableProps) {
         />
       )}
 
-      {/* Add Modal */}
       {isAddModalOpen && (
         <BookEditModal
           book={null}
@@ -276,7 +409,6 @@ export default function BookTable({ token }: BookTableProps) {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       {deletingBook && (
         <DeleteConfirmModal
           bookCode={formatBookCode(deletingBook.codigo)}
@@ -284,6 +416,52 @@ export default function BookTable({ token }: BookTableProps) {
           onConfirm={handleDeleteConfirm}
           onCancel={() => setDeletingBook(null)}
           isDeleting={isDeleting}
+        />
+      )}
+
+      {showBulkEdit && (
+        <BulkEditModal
+          selectedCount={selectedBooks.size}
+          onConfirm={handleBulkEdit}
+          onCancel={() => setShowBulkEdit(false)}
+          isUpdating={isBulkProcessing}
+        />
+      )}
+
+      {showBulkDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Confirm Bulk Deletion
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete {selectedBooks.size} selected books? 
+              This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBulkDelete(false)}
+                disabled={isBulkProcessing}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkDeleteConfirm}
+                disabled={isBulkProcessing}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+              >
+                {isBulkProcessing ? 'Deleting...' : `Delete ${selectedBooks.size} Books`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPasteCodes && (
+        <PasteCodesModal
+          onConfirm={handlePasteCodes}
+          onCancel={() => setShowPasteCodes(false)}
         />
       )}
     </div>
