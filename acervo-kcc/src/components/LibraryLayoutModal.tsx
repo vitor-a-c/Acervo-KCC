@@ -748,7 +748,7 @@ export default function LibraryLayoutModal({ isOpen, onClose, highlightedShelf }
             <div className="text-sm text-gray-600">
               {highlightedShelf && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                  📍 Estante {highlightedShelf} destacada
+                  Estante {highlightedShelf} destacada
                 </span>
               )}
             </div>

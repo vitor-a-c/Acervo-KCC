@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { BookDocument } from '@/types/database';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BookEditModalProps {
   book: BookDocument | null;
@@ -11,7 +12,9 @@ interface BookEditModalProps {
 }
 
 export default function BookEditModal({ book, token, onClose, onSave }: BookEditModalProps) {
+  const { t } = useLanguage();
   const isEditing = !!book;
+  
   const [formData, setFormData] = useState({
     codigo: book?.codigo || '',
     titulo: book?.titulo || '',
@@ -27,8 +30,22 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
     isbn: book?.isbn || '',
     preco: book?.preco || 0
   });
+  
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const predefinedPositions = [
+    'A1','A2','A3','A4','A5','A6','A7','A8',
+    'B1','B2','B3','B4','B5','B6','B7','B8','B9','B10','B11',
+    'C1','C2','C3','C4','C5','C6','C7',
+    'D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12'
+  ];
+
+  const sejongLevels = [
+    '1A+', '1B+', '2A+', '2B+', '3A+', '3B+',
+    '4A+', '4B+', '5A+', '5B+',
+    'Português', 'Inglês (English)'
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,12 +70,12 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || 'Failed to save book');
+        throw new Error(data.message || t.admin.bookManagement.messages.failedToSave);
       }
 
       onSave();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error saving book');
+      setError(err instanceof Error ? err.message : t.admin.bookManagement.messages.errorSaving);
     } finally {
       setSaving(false);
     }
@@ -71,7 +88,7 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
         <div className="sticky top-0 bg-white border-b p-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">
-              {isEditing ? 'Edit Book' : 'Add New Book'}
+              {isEditing ? t.admin.modals.editBook.editTitle : t.admin.modals.editBook.addTitle}
             </h2>
             <button
               onClick={onClose}
@@ -96,7 +113,7 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Code (Código) *
+                {t.admin.modals.editBook.fieldLabels.codeRequired}
               </label>
               <input
                 type="text"
@@ -110,7 +127,7 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Title (Título) *
+                {t.admin.modals.editBook.fieldLabels.titleRequired}
               </label>
               <input
                 type="text"
@@ -123,7 +140,7 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Author (Autor)
+                {t.admin.modals.editBook.fieldLabels.author}
               </label>
               <input
                 type="text"
@@ -135,19 +152,44 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Location (Posição)
+                {t.admin.modals.editBook.fieldLabels.location}
               </label>
-              <input
-                type="text"
-                value={formData.posicao}
-                onChange={(e) => setFormData({ ...formData, posicao: e.target.value })}
+              <select
+                value={
+                  predefinedPositions.includes(formData.posicao)
+                    ? formData.posicao
+                    : 'Other'
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === 'Other') {
+                    setFormData({ ...formData, posicao: '' });
+                  } else {
+                    setFormData({ ...formData, posicao: value });
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              >
+                <option value="">{t.admin.bookManagement.fields.selectOption}</option>
+                {predefinedPositions.map(pos => (
+                  <option key={pos} value={pos}>{pos}</option>
+                ))}
+                <option value="Other">{t.admin.bookManagement.fields.other}</option>
+              </select>
+              {(!predefinedPositions.includes(formData.posicao) && formData.posicao !== '') || (formData.posicao === '') ? (
+                <input
+                  type="text"
+                  placeholder={t.admin.bookManagement.fields.enterPosition}
+                  value={formData.posicao}
+                  onChange={(e) => setFormData({ ...formData, posicao: e.target.value })}
+                  className="mt-2 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              ) : null}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Call Number (Número Chamada)
+                {t.admin.modals.editBook.fieldLabels.callNumber}
               </label>
               <input
                 type="text"
@@ -159,7 +201,7 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Publisher (Editora)
+                {t.admin.modals.editBook.fieldLabels.publisher}
               </label>
               <input
                 type="text"
@@ -171,7 +213,7 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Publication Year
+                {t.admin.modals.editBook.fieldLabels.publicationYear}
               </label>
               <input
                 type="number"
@@ -183,7 +225,7 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                ISBN
+                {t.admin.modals.editBook.fieldLabels.isbn}
               </label>
               <input
                 type="text"
@@ -195,7 +237,7 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Price (Preço)
+                {t.admin.modals.editBook.fieldLabels.price}
               </label>
               <input
                 type="number"
@@ -208,33 +250,26 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Sejong Level
+                {t.admin.modals.editBook.fieldLabels.sejongLevel}
               </label>
               <select
                 value={formData.nivel_sejong}
                 onChange={(e) => setFormData({ ...formData, nivel_sejong: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">None</option>
-                <option value="1A+">1A+</option>
-                <option value="1B+">1B+</option>
-                <option value="2A+">2A+</option>
-                <option value="2B+">2B+</option>
-                <option value="3A+">3A+</option>
-                <option value="3B+">3B+</option>
-                <option value="4A+">4A+</option>
-                <option value="4B+">4B+</option>
-                <option value="5A+">5A+</option>
-                <option value="5B+">5B+</option>
-                <option value="Português">Português</option>
-                <option value="Inglês (English)">Inglês (English)</option>
+                <option value="">{t.admin.bookManagement.fields.none}</option>
+                {sejongLevels.map(level => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
               </select>
             </div>
           </div>
 
           {/* Status Fields */}
           <div className="border-t pt-4 mt-4">
-            <h3 className="font-medium text-gray-900 mb-3">Status</h3>
+            <h3 className="font-medium text-gray-900 mb-3">
+              {t.admin.modals.editBook.fieldLabels.status}
+            </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center space-x-2">
@@ -245,7 +280,7 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <span className="text-sm font-medium text-gray-700">
-                    Borrowed (Emprestado)
+                    {t.admin.modals.editBook.fieldLabels.borrowedStatus}
                   </span>
                 </label>
               </div>
@@ -253,7 +288,7 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
               {formData.emprestado && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Return Date
+                    {t.admin.modals.editBook.fieldLabels.returnDate}
                   </label>
                   <input
                     type="date"
@@ -273,14 +308,18 @@ export default function BookEditModal({ book, token, onClose, onSave }: BookEdit
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
             >
-              Cancel
+              {t.admin.bookManagement.actions.cancel}
             </button>
             <button
               type="submit"
               disabled={saving}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              {saving ? 'Saving...' : isEditing ? 'Update Book' : 'Add Book'}
+              {saving 
+                ? t.admin.bookManagement.status.saving 
+                : isEditing 
+                  ? t.admin.bookManagement.actions.update 
+                  : t.admin.bookManagement.actions.add}
             </button>
           </div>
         </form>

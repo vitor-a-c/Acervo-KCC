@@ -1,5 +1,7 @@
 'use client';
 
+import { useLanguage } from '@/contexts/LanguageContext';
+
 interface BulkActionsBarProps {
   selectedCount: number;
   onEdit: () => void;
@@ -15,35 +17,41 @@ export default function BulkActionsBar({
   onClear,
   onPasteCodes
 }: BulkActionsBarProps) {
+  const { t } = useLanguage();
+
   if (selectedCount === 0) return null;
+
+  const selectionText = selectedCount === 1 
+    ? t.admin.bulkActions.bookSelected
+    : t.admin.bulkActions.booksSelected.replace('{count}', selectedCount.toString());
 
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-blue-900">
-            {selectedCount} book{selectedCount !== 1 ? 's' : ''} selected
+            {selectionText}
           </span>
           
           <button
             onClick={onEdit}
             className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50"
           >
-            Edit Selected
+            {t.admin.bulkActions.editSelected}
           </button>
           
           <button
             onClick={onDelete}
             className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
           >
-            Delete Selected
+            {t.admin.bulkActions.deleteSelected}
           </button>
           
           <button
             onClick={onPasteCodes}
             className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50"
           >
-            Select by Codes
+            {t.admin.bulkActions.selectByCodes}
           </button>
         </div>
         
@@ -51,7 +59,7 @@ export default function BulkActionsBar({
           onClick={onClear}
           className="text-sm text-gray-600 hover:text-gray-800"
         >
-          Clear Selection
+          {t.admin.bulkActions.clearSelection}
         </button>
       </div>
     </div>

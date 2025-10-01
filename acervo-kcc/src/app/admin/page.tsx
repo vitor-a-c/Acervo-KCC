@@ -4,6 +4,8 @@ import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Papa from 'papaparse';
 import BookTable from '@/components/admin/BookTable';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getTranslation } from '@/lib/translations';
 
 interface UploadStatus {
   total: number;
@@ -18,6 +20,9 @@ interface CSVRow {
 }
 
 export default function AdminPage() {
+  const { language } = useLanguage();
+  const t = getTranslation(language);
+  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [uploadStatus, setUploadStatus] = useState<UploadStatus | null>(null);
@@ -42,10 +47,10 @@ export default function AdminPage() {
         localStorage.setItem('adminToken', data.token);
         setIsAuthenticated(true);
       } else {
-        alert('Invalid password');
+        alert(t.admin.login.invalidPassword);
       }
     } catch {
-      alert('Authentication error');
+      alert(t.admin.authError);
     }
   };
 
@@ -123,11 +128,11 @@ export default function AdminPage() {
         setUploadStatus(result);
       } else {
         const error = await response.json();
-        alert(`Upload failed: ${error.message}`);
+        alert(`${t.admin.upload.uploadFailed}: ${error.message}`);
       }
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Upload failed. Please check the console for details.');
+      alert(`${t.admin.upload.uploadFailed}. Please check the console for details.`);
     } finally {
       setIsUploading(false);
     }
@@ -139,14 +144,14 @@ export default function AdminPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Admin Access</h1>
-            <p className="text-gray-600 mt-2">Enter password to continue</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t.admin.login.title}</h1>
+            <p className="text-gray-600 mt-2">{t.admin.login.subtitle}</p>
           </div>
           
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
+                {t.admin.login.password}
               </label>
               <input
                 type="password"
@@ -163,7 +168,7 @@ export default function AdminPage() {
               className="w-full py-2 px-4 text-white rounded-md hover:opacity-90 transition-opacity"
               style={{backgroundColor: '#053863'}}
             >
-              Login
+              {t.admin.login.loginButton}
             </button>
           </form>
         </div>
@@ -187,7 +192,7 @@ export default function AdminPage() {
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                📚 Manage Books
+                {t.admin.tabs.manage}
               </button>
               <button
                 onClick={() => setActiveTab('upload')}
@@ -197,7 +202,7 @@ export default function AdminPage() {
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                📤 CSV Upload
+                {t.admin.tabs.csvUpload}
               </button>
             </div>
           </div>
@@ -209,7 +214,7 @@ export default function AdminPage() {
         ) : (
           <div className="bg-white rounded-b-lg shadow-lg p-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-8">
-              Library CSV Upload
+              {t.admin.upload.title}
             </h1>
 
             {/* File Upload Area */}
@@ -228,16 +233,16 @@ export default function AdminPage() {
                   <div>
                     <p className="text-lg font-medium text-gray-900">{selectedFile.name}</p>
                     <p className="text-sm text-gray-600 mt-1">
-                      {(selectedFile.size / 1024).toFixed(2)} KB
+                      {(selectedFile.size / 1024).toFixed(2)} {t.admin.upload.fileSize}
                     </p>
                   </div>
                 ) : (
                   <div>
                     <p className="text-lg font-medium text-gray-900">
-                      Drop CSV file here or click to select
+                      {t.admin.upload.dropzone}
                     </p>
                     <p className="text-sm text-gray-600 mt-2">
-                      Supports CSV files with UTF-8 encoding
+                      {t.admin.upload.dropzoneHint}
                     </p>
                   </div>
                 )}
@@ -248,7 +253,7 @@ export default function AdminPage() {
             {csvPreview.length > 0 && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Preview (First 5 rows)
+                  {t.admin.upload.preview}
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200 text-sm">
@@ -293,10 +298,10 @@ export default function AdminPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Processing...
+                    {t.admin.upload.processing}
                   </span>
                 ) : (
-                  'Upload CSV'
+                  t.admin.upload.uploadButton
                 )}
               </button>
 
@@ -308,7 +313,7 @@ export default function AdminPage() {
                 }}
                 className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
               >
-                Clear
+                {t.admin.upload.clearButton}
               </button>
             </div>
 
@@ -316,23 +321,23 @@ export default function AdminPage() {
             {uploadStatus && (
               <div className="mt-8 p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  Upload Results
+                  {t.admin.upload.results.title}
                 </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Total Records:</span>
+                    <span>{t.admin.upload.results.total}</span>
                     <span className="font-medium">{uploadStatus.total}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Processed:</span>
+                    <span>{t.admin.upload.results.processed}</span>
                     <span className="font-medium">{uploadStatus.processed}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>New Books Added:</span>
+                    <span>{t.admin.upload.results.added}</span>
                     <span className="font-medium text-green-600">{uploadStatus.added}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Books Updated:</span>
+                    <span>{t.admin.upload.results.updated}</span>
                     <span className="font-medium text-blue-600">{uploadStatus.updated}</span>
                   </div>
                 </div>
@@ -340,7 +345,7 @@ export default function AdminPage() {
                 {uploadStatus.errors.length > 0 && (
                   <div className="mt-4">
                     <h4 className="text-sm font-semibold text-red-600 mb-2">
-                      Errors ({uploadStatus.errors.length})
+                      {t.admin.upload.results.errors} ({uploadStatus.errors.length})
                     </h4>
                     <div className="max-h-32 overflow-y-auto bg-red-50 p-2 rounded text-xs text-red-700">
                       {uploadStatus.errors.map((error, idx) => (

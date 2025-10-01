@@ -8,6 +8,8 @@ import BulkActionsBar from './BulkActionsBar';
 import BulkEditModal from './BulkEditModal';
 import PasteCodesModal from './PasteCodesModal';
 import { formatBookCode } from '@/utils/bookUtils';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getTranslation } from '@/lib/translations';
 
 interface BookTableProps {
   token: string | null;
@@ -21,6 +23,9 @@ interface PaginationInfo {
 }
 
 export default function BookTable({ token }: BookTableProps) {
+  const { language } = useLanguage();
+  const t = getTranslation(language);
+  
   const [books, setBooks] = useState<BookDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -118,7 +123,7 @@ export default function BookTable({ token }: BookTableProps) {
     });
     setSelectedBooks(newSelection);
     setShowPasteCodes(false);
-    setSuccessMessage(`${newSelection.size} books selected from pasted codes`);
+    setSuccessMessage(t.admin.bookManagement.messages.booksBulkSelected.replace('{count}', newSelection.size.toString()));
   };
 
   // Handle bulk edit
@@ -145,11 +150,11 @@ export default function BookTable({ token }: BookTableProps) {
         setSelectedBooks(new Set());
         setShowBulkEdit(false);
       } else {
-        alert('Failed to update books');
+        alert(t.admin.bookManagement.messages.failedToUpdate);
       }
     } catch (error) {
       console.error('Error updating books:', error);
-      alert('Error updating books');
+      alert(t.admin.bookManagement.messages.errorUpdating);
     } finally {
       setIsBulkProcessing(false);
     }
@@ -177,11 +182,11 @@ export default function BookTable({ token }: BookTableProps) {
         setSelectedBooks(new Set());
         setShowBulkDelete(false);
       } else {
-        alert('Failed to delete books');
+        alert(t.admin.bookManagement.messages.failedToDelete);
       }
     } catch (error) {
       console.error('Error deleting books:', error);
-      alert('Error deleting books');
+      alert(t.admin.bookManagement.messages.failedToDelete);
     } finally {
       setIsBulkProcessing(false);
     }
@@ -201,15 +206,15 @@ export default function BookTable({ token }: BookTableProps) {
       });
 
       if (response.ok) {
-        setSuccessMessage(`Book "${deletingBook.titulo}" deleted successfully`);
+        setSuccessMessage(t.admin.bookManagement.messages.bookDeleted.replace('{title}', deletingBook.titulo));
         fetchBooks(pagination.page, searchTerm);
         setDeletingBook(null);
       } else {
-        alert('Failed to delete book');
+        alert(t.admin.bookManagement.messages.failedToDelete);
       }
     } catch (error) {
       console.error('Error deleting book:', error);
-      alert('Error deleting book');
+      alert(t.admin.bookManagement.messages.failedToDelete);
     } finally {
       setIsDeleting(false);
     }
@@ -220,17 +225,20 @@ export default function BookTable({ token }: BookTableProps) {
     fetchBooks(pagination.page, searchTerm);
     setEditingBook(null);
     setIsAddModalOpen(false);
-    setSuccessMessage('Book saved successfully');
+    setSuccessMessage(t.admin.bookManagement.messages.bookSaved);
   };
 
   if (loading && books.length === 0) {
     return (
       <div className="text-center py-8">
         <div className="animate-spin h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
-        <p className="mt-2 text-gray-600">Loading books...</p>
+        <p className="mt-2 text-gray-600">{t.admin.bookManagement.loadingBooks}</p>
       </div>
     );
   }
+
+  const start = (pagination.page - 1) * pagination.limit + 1;
+  const end = Math.min(pagination.page * pagination.limit, pagination.total);
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -247,29 +255,50 @@ export default function BookTable({ token }: BookTableProps) {
       {/* Header */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Book Management</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t.admin.bookManagement.title}</h2>
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           >
-            + Add New Book
+            {t.admin.bookManagement.addNewBook}
           </button>
         </div>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="flex gap-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            let term = searchTerm.trim();
+            // If matches code pattern like EM####, pad with zeroes to 10 digits after prefix
+            const codeMatch = term.match(/^([A-Z]{2})(\d{1,})$/i);
+            if (codeMatch) {
+              const prefix = codeMatch[1].toUpperCase();
+              const num = codeMatch[2].padStart(10, '0');
+              term = `${prefix}${num}`;
+            } else {
+              // If matches pattern like A########## (A + 11 digits), pad if needed
+              const singleCodeMatch = term.match(/^A(\d{1,11})$/i);
+              if (singleCodeMatch) {
+                const num = singleCodeMatch[1].padStart(11, '0');
+                term = `A${num}`;
+              }
+            }
+            fetchBooks(1, term);
+          }}
+          className="flex gap-2"
+        >
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by title, author, code..."
+            placeholder={t.admin.bookManagement.searchPlaceholder}
             className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             type="submit"
             className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            Search
+            {t.admin.bookManagement.searchButton}
           </button>
           <button
             type="button"
@@ -279,7 +308,7 @@ export default function BookTable({ token }: BookTableProps) {
             }}
             className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50"
           >
-            Clear
+            {t.admin.bookManagement.clearButton}
           </button>
         </form>
       </div>
@@ -306,12 +335,24 @@ export default function BookTable({ token }: BookTableProps) {
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Author</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {t.admin.bookManagement.columns.code}
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {t.admin.bookManagement.columns.title}
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {t.admin.bookManagement.columns.author}
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {t.admin.bookManagement.columns.location}
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {t.admin.bookManagement.columns.status}
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {t.admin.bookManagement.columns.actions}
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -337,7 +378,7 @@ export default function BookTable({ token }: BookTableProps) {
                       ? 'bg-red-100 text-red-700' 
                       : 'bg-green-100 text-green-700'
                   }`}>
-                    {book.emprestado ? 'Borrowed' : 'Available'}
+                    {book.emprestado ? t.admin.bookManagement.status.borrowed : t.admin.bookManagement.status.available}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm">
@@ -345,13 +386,13 @@ export default function BookTable({ token }: BookTableProps) {
                     onClick={() => setEditingBook(book)}
                     className="text-blue-600 hover:text-blue-800 mr-3"
                   >
-                    Edit
+                    {t.admin.bookManagement.actions.edit}
                   </button>
                   <button
                     onClick={() => setDeletingBook(book)}
                     className="text-red-600 hover:text-red-800"
                   >
-                    Delete
+                    {t.admin.bookManagement.actions.delete}
                   </button>
                 </td>
               </tr>
@@ -364,9 +405,10 @@ export default function BookTable({ token }: BookTableProps) {
       {pagination.totalPages > 1 && (
         <div className="mt-4 flex justify-between items-center">
           <div className="text-sm text-gray-600">
-            Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-            {pagination.total} books
+            {t.admin.bookManagement.showingBooks
+              .replace('{start}', start.toString())
+              .replace('{end}', end.toString())
+              .replace('{total}', pagination.total.toString())}
           </div>
           <div className="flex gap-2">
             <button
@@ -374,17 +416,17 @@ export default function BookTable({ token }: BookTableProps) {
               disabled={pagination.page === 1}
               className="px-4 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
             >
-              Previous
+              {t.pagination.previous}
             </button>
             <span className="px-4 py-2">
-              Page {pagination.page} of {pagination.totalPages}
+              {t.pagination.page} {pagination.page} {t.pagination.of} {pagination.totalPages}
             </span>
             <button
               onClick={() => fetchBooks(pagination.page + 1, searchTerm)}
               disabled={pagination.page === pagination.totalPages}
               className="px-4 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
             >
-              Next
+              {t.pagination.next}
             </button>
           </div>
         </div>
@@ -432,11 +474,10 @@ export default function BookTable({ token }: BookTableProps) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Confirm Bulk Deletion
+              {t.admin.modals.deleteConfirm.bulkTitle}
             </h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete {selectedBooks.size} selected books? 
-              This action cannot be undone.
+              {t.admin.modals.deleteConfirm.bulkMessage.replace('{count}', selectedBooks.size.toString())}
             </p>
             <div className="flex gap-3">
               <button
@@ -444,14 +485,16 @@ export default function BookTable({ token }: BookTableProps) {
                 disabled={isBulkProcessing}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
               >
-                Cancel
+                {t.admin.bookManagement.actions.cancel}
               </button>
               <button
                 onClick={handleBulkDeleteConfirm}
                 disabled={isBulkProcessing}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
               >
-                {isBulkProcessing ? 'Deleting...' : `Delete ${selectedBooks.size} Books`}
+                {isBulkProcessing 
+                  ? t.admin.bookManagement.status.deleting 
+                  : t.admin.modals.deleteConfirm.bulkDeleteButton.replace('{count}', selectedBooks.size.toString())}
               </button>
             </div>
           </div>

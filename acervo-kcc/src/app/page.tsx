@@ -478,11 +478,11 @@ export default function HomePage() {
                           className="text-xs px-3 py-1 rounded-full border transition-colors hover:bg-gray-50"
                           style={{borderColor: '#053863', color: '#053863'}}
                         >
-                          📍 {language === 'pt' ? 'Ver no layout' : language === 'ko' ? '배치도에서 보기' : 'Show in layout'}
+                          {language === 'pt' ? 'Ver no layout' : language === 'ko' ? '배치도에서 보기' : 'Show in layout'}
                         </button>
                       ) : (
                         <span className="text-xs px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-                          📍 {language === 'pt' ? 'Área especial: ' : language === 'ko' ? '특별 구역: ' : 'Special area: '}{book['Posição']}
+                          {language === 'pt' ? 'Área especial: ' : language === 'ko' ? '특별 구역: ' : 'Special area: '}{book['Posição']}
                         </span>
                       )}
                     </div>

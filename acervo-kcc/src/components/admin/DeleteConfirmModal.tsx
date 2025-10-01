@@ -1,5 +1,7 @@
 'use client';
 
+import { useLanguage } from '@/contexts/LanguageContext';
+
 interface DeleteConfirmModalProps {
   bookCode: string;
   bookTitle: string;
@@ -15,6 +17,8 @@ export default function DeleteConfirmModal({
   onCancel,
   isDeleting
 }: DeleteConfirmModalProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-md w-full p-6">
@@ -30,17 +34,17 @@ export default function DeleteConfirmModal({
 
         {/* Content */}
         <h3 className="text-lg font-semibold text-center text-gray-900 mb-2">
-          Confirm Deletion
+          {t.admin.modals.deleteConfirm.title}
         </h3>
         
         <p className="text-center text-gray-600 mb-6">
-          Are you sure you want to delete this book?
+          {t.admin.modals.deleteConfirm.message}
           <br />
           <span className="font-semibold text-gray-900 mt-2 block">
             {bookTitle}
           </span>
           <span className="text-sm text-gray-500">
-            Code: {bookCode}
+            {t.admin.modals.deleteConfirm.codeLabel} {bookCode}
           </span>
         </p>
 
@@ -51,14 +55,16 @@ export default function DeleteConfirmModal({
             disabled={isDeleting}
             className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
           >
-            Cancel
+            {t.admin.bookManagement.actions.cancel}
           </button>
           <button
             onClick={onConfirm}
             disabled={isDeleting}
             className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
           >
-            {isDeleting ? 'Deleting...' : 'Delete'}
+            {isDeleting 
+              ? t.admin.bookManagement.status.deleting 
+              : t.admin.modals.deleteConfirm.deleteButton}
           </button>
         </div>
       </div>
