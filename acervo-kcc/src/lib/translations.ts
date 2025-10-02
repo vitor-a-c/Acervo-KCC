@@ -81,6 +81,88 @@ export interface Translations {
     closed: string;
     rights: string;
   };
+
+  // Loan Section
+  loans: {
+  // Actions
+  borrow: string;
+  return: string;
+  extend: string;
+  viewLoan: string;
+  manageLoan: string;
+  
+  // Titles
+  borrowBook: string;
+  returnBook: string;
+  extendLoan: string;
+  loanDetails: string;
+  activeLoan: string;
+  loanHistory: string;
+  
+  // Borrower Information
+  borrowerInfo: string;
+  borrowerName: string;
+  borrowerEmail: string;
+  borrowerPhone: string;
+  borrowerId: string;
+  borrowerAddress: string;
+  borrowerNameRequired: string;
+  
+  // Dates
+  loanDate: string;
+  returnDate: string;
+  originalReturnDate: string;
+  currentReturnDate: string;
+  returnedDate: string;
+  daysRemaining: string;
+  dueIn: string;
+  
+  // Status
+  overdue: string;
+  overdueDays: string;
+  overdueBy: string;
+  extended: string;
+  timesExtended: string;
+  canExtend: string;
+  cannotExtend: string;
+  maxExtensionsReached: string;
+  noActiveLoan: string;
+  
+  // Filters
+  showOnlyOverdue: string;
+  showOnlyActive: string;
+  showAll: string;
+  
+  // Confirmations
+  confirmReturn: string;
+  confirmReturnMessage: string;
+  confirmExtend: string;
+  confirmExtendMessage: string;
+  
+  // Success Messages
+  bookBorrowed: string;
+  bookReturned: string;
+  loanExtended: string;
+  loanCreated: string;
+  loanUpdated: string;
+  
+  // Notes
+  notes: string;
+  addNotes: string;
+  notesPlaceholder: string;
+  
+  // Errors
+  errors: {
+    alreadyBorrowed: string;
+    notBorrowed: string;
+    failedToCreate: string;
+    failedToExtend: string;
+    failedToReturn: string;
+    failedToLoad: string;
+    bookNotFound: string;
+    loanNotFound: string;
+  };
+}
   
   // Admin Section
   admin: {
@@ -278,7 +360,7 @@ export const translations: Record<Language, Translations> = {
     book: {
       author: "Autor(a):",
       unknown: "Desconhecido",
-      code: "CÃ³digo:",
+      code: "Código:",
       callNumber: "Chamada:",
       location: "Local:",
       theme: "Tema:",
@@ -314,6 +396,67 @@ export const translations: Record<Language, Translations> = {
       sunday: "Domingo: Fechado",
       rights: "2025 Centro Cultural Coreano no Brasil.",
       closed: ""
+    },
+    loans: {
+      borrow: "Emprestar",
+      return: "Devolver",
+      extend: "Prorrogar",
+      viewLoan: "Ver Empréstimo",
+      manageLoan: "Gerenciar Empréstimo",
+      borrowBook: "Emprestar Livro",
+      returnBook: "Devolver Livro",
+      extendLoan: "Prorrogar Empréstimo",
+      loanDetails: "Detalhes do Empréstimo",
+      activeLoan: "Empréstimo Ativo",
+      loanHistory: "Histórico de Empréstimos",
+      borrowerInfo: "Informações do Usuário",
+      borrowerName: "Nome do Usuário",
+      borrowerEmail: "E-mail",
+      borrowerPhone: "Telefone",
+      borrowerId: "CPF/RG/Passaporte",
+      borrowerAddress: "Endereço",
+      borrowerNameRequired: "Nome do Usuário (Obrigatório)",
+      loanDate: "Data do Empréstimo",
+      returnDate: "Data de Devolução",
+      originalReturnDate: "Data Original de Devolução",
+      currentReturnDate: "Data Atual de Devolução",
+      returnedDate: "Data de Devolução Efetiva",
+      daysRemaining: "Dias Restantes",
+      dueIn: "Vence em",
+      overdue: "Atrasado",
+      overdueDays: "dias de atraso",
+      overdueBy: "Atrasado por",
+      extended: "Prorrogado",
+      timesExtended: "vez(es) prorrogado",
+      canExtend: "Pode ser prorrogado por mais 21 dias",
+      cannotExtend: "Não pode ser prorrogado",
+      maxExtensionsReached: "Limite de prorrogações atingido",
+      noActiveLoan: "Sem empréstimo ativo",
+      showOnlyOverdue: "Apenas atrasados",
+      showOnlyActive: "Apenas ativos",
+      showAll: "Todos",
+      confirmReturn: "Confirmar Devolução",
+      confirmReturnMessage: "Tem certeza que deseja marcar este livro como devolvido?",
+      confirmExtend: "Confirmar Prorrogação",
+      confirmExtendMessage: "Isso adicionará 21 dias à data de devolução atual.",
+      bookBorrowed: "Livro emprestado com sucesso",
+      bookReturned: "Livro devolvido com sucesso",
+      loanExtended: "Empréstimo prorrogado com sucesso",
+      loanCreated: "Empréstimo criado com sucesso",
+      loanUpdated: "Empréstimo atualizado com sucesso",
+      notes: "Observações",
+      addNotes: "Adicionar observações",
+      notesPlaceholder: "Observações sobre o empréstimo...",
+      errors: {
+        alreadyBorrowed: "Este livro já está emprestado",
+        notBorrowed: "Este livro não está emprestado",
+        failedToCreate: "Falha ao criar empréstimo",
+        failedToExtend: "Falha ao prorrogar empréstimo",
+        failedToReturn: "Falha ao devolver livro",
+        failedToLoad: "Falha ao carregar informações do empréstimo",
+        bookNotFound: "Livro não encontrado",
+        loanNotFound: "Empréstimo não encontrado"
+      }
     },
     admin: {
       title: "Administração da Biblioteca",
@@ -539,6 +682,67 @@ export const translations: Record<Language, Translations> = {
       sunday: "일요일: 휴무",
       rights: "2025 한국문화원.",
       closed: ""
+    },
+    loans: {
+      borrow: "대출",
+      return: "반납",
+      extend: "연장",
+      viewLoan: "대출 정보",
+      manageLoan: "대출 관리",
+      borrowBook: "도서 대출",
+      returnBook: "도서 반납",
+      extendLoan: "대출 연장",
+      loanDetails: "대출 상세정보",
+      activeLoan: "진행 중인 대출",
+      loanHistory: "대출 기록",
+      borrowerInfo: "대출자 정보",
+      borrowerName: "대출자 이름",
+      borrowerEmail: "이메일",
+      borrowerPhone: "전화번호",
+      borrowerId: "신분증 번호",
+      borrowerAddress: "주소",
+      borrowerNameRequired: "대출자 이름 (필수)",
+      loanDate: "대출일",
+      returnDate: "반납 예정일",
+      originalReturnDate: "원래 반납 예정일",
+      currentReturnDate: "현재 반납 예정일",
+      returnedDate: "실제 반납일",
+      daysRemaining: "남은 일수",
+      dueIn: "반납까지",
+      overdue: "연체",
+      overdueDays: "일 연체",
+      overdueBy: "연체",
+      extended: "연장됨",
+      timesExtended: "회 연장됨",
+      canExtend: "21일 더 연장 가능",
+      cannotExtend: "연장 불가",
+      maxExtensionsReached: "최대 연장 횟수 도달",
+      noActiveLoan: "진행 중인 대출 없음",
+      showOnlyOverdue: "연체만 보기",
+      showOnlyActive: "진행 중만 보기",
+      showAll: "전체 보기",
+      confirmReturn: "반납 확인",
+      confirmReturnMessage: "이 책을 반납 완료 처리하시겠습니까?",
+      confirmExtend: "연장 확인",
+      confirmExtendMessage: "현재 반납 예정일에 21일이 추가됩니다.",
+      bookBorrowed: "도서 대출이 완료되었습니다",
+      bookReturned: "도서 반납이 완료되었습니다",
+      loanExtended: "대출이 연장되었습니다",
+      loanCreated: "대출이 생성되었습니다",
+      loanUpdated: "대출 정보가 업데이트되었습니다",
+      notes: "메모",
+      addNotes: "메모 추가",
+      notesPlaceholder: "대출 관련 메모...",
+      errors: {
+        alreadyBorrowed: "이미 대출 중인 도서입니다",
+        notBorrowed: "대출 중이 아닌 도서입니다",
+        failedToCreate: "대출 생성 실패",
+        failedToExtend: "대출 연장 실패",
+        failedToReturn: "도서 반납 실패",
+        failedToLoad: "대출 정보 로드 실패",
+        bookNotFound: "도서를 찾을 수 없습니다",
+        loanNotFound: "대출 정보를 찾을 수 없습니다"
+      }
     },
     admin: {
       title: "도서관 관리",
@@ -770,6 +974,67 @@ export const translations: Record<Language, Translations> = {
       sunday: "Sunday: Closed",
       rights: "2025 Korean Cultural Center in Brazil.",
       closed: ""
+    },
+    loans: {
+      borrow: "Borrow",
+      return: "Return",
+      extend: "Extend",
+      viewLoan: "View Loan",
+      manageLoan: "Manage Loan",
+      borrowBook: "Borrow Book",
+      returnBook: "Return Book",
+      extendLoan: "Extend Loan",
+      loanDetails: "Loan Details",
+      activeLoan: "Active Loan",
+      loanHistory: "Loan History",
+      borrowerInfo: "Borrower Information",
+      borrowerName: "Borrower Name",
+      borrowerEmail: "Email",
+      borrowerPhone: "Phone",
+      borrowerId: "ID Number",
+      borrowerAddress: "Address",
+      borrowerNameRequired: "Borrower Name (Required)",
+      loanDate: "Loan Date",
+      returnDate: "Return Date",
+      originalReturnDate: "Original Return Date",
+      currentReturnDate: "Current Return Date",
+      returnedDate: "Actual Return Date",
+      daysRemaining: "Days Remaining",
+      dueIn: "Due in",
+      overdue: "Overdue",
+      overdueDays: "days overdue",
+      overdueBy: "Overdue by",
+      extended: "Extended",
+      timesExtended: "time(s) extended",
+      canExtend: "Can be extended for 21 more days",
+      cannotExtend: "Cannot be extended",
+      maxExtensionsReached: "Maximum extensions reached",
+      noActiveLoan: "No active loan",
+      showOnlyOverdue: "Show overdue only",
+      showOnlyActive: "Show active only",
+      showAll: "Show all",
+      confirmReturn: "Confirm Return",
+      confirmReturnMessage: "Are you sure you want to mark this book as returned?",
+      confirmExtend: "Confirm Extension",
+      confirmExtendMessage: "This will add 21 days to the current return date.",
+      bookBorrowed: "Book borrowed successfully",
+      bookReturned: "Book returned successfully",
+      loanExtended: "Loan extended successfully",
+      loanCreated: "Loan created successfully",
+      loanUpdated: "Loan updated successfully",
+      notes: "Notes",
+      addNotes: "Add notes",
+      notesPlaceholder: "Notes about the loan...",
+      errors: {
+        alreadyBorrowed: "This book is already borrowed",
+        notBorrowed: "This book is not borrowed",
+        failedToCreate: "Failed to create loan",
+        failedToExtend: "Failed to extend loan",
+        failedToReturn: "Failed to return book",
+        failedToLoad: "Failed to load loan information",
+        bookNotFound: "Book not found",
+        loanNotFound: "Loan not found"
+      }
     },
     admin: {
       title: "Library Administration",

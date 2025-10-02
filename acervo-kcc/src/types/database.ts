@@ -1,34 +1,69 @@
+import { ObjectId } from 'mongodb';
+
 export interface BookDocument {
   _id?: string;
-  codigo: string;                    // 등록번호 -> Registration Number (unique identifier)
-  posicao: string;                   // 자료실 -> Reading Room / Location
-  titulo: string;                    // 서명 -> Title
-  autor: string;                     // 저자 -> Author
-  numero_chamada: string;            // 청구기호 -> Call Number
-  categoria_livro: string;           // 이용대상구분 -> User Category
+  codigo: string;                    // Registration Number (unique identifier)
+  posicao: string;                   // Reading Room / Location
+  titulo: string;                    // Title
+  autor: string;                     // Author
+  numero_chamada: string;            // Call Number
+  categoria_livro: string;           // User Category
   tema: string;                      // Derived from KDC code
-  data_registro: string;             // 배가일 -> Shelf Date
-  emprestado: boolean;               // Derived from 자료상태
-  data_retorno: string;              // Will be managed separately
-  nivel_sejong: string;              // Will be managed separately
+  data_registro: string;             // Shelf Date
+  emprestado: boolean;               // Borrowed status
+  data_retorno: string;              // Return date (empty if not borrowed)
+  nivel_sejong: string;              // Sejong level recommendation
+  
+  // Loan tracking
+  current_loan_id?: string | null;          // Reference to active loan
+  total_loans?: number;              // Total times borrowed (for statistics)
   
   // Additional fields from CSV
-  numero_sequencial?: number;        // 번호 -> Sequential Number
-  volume?: string;                   // 권서명 -> Volume Title
-  editora?: string;                  // 발행자 -> Publisher
-  ano_publicacao?: number;           // 발행년 -> Publication Year
+  numero_sequencial?: number;        // Sequential Number
+  volume?: string;                   // Volume Title
+  editora?: string;                  // Publisher
+  ano_publicacao?: number;           // Publication Year
   isbn?: string;                     // ISBN
-  restricao_uso?: string;            // 이용제한구분 -> Usage Restriction
-  estado_material?: string;          // 자료상태 -> Material Status
-  tipo_material?: string;            // 자료구분 -> Material Type
-  preco?: number;                    // 가격 -> Price
-  tipo_aquisicao?: string;           // 입수구분 -> Acquisition Type
-  data_alteracao_estado?: string;    // 자료상태변경일 -> Status Change Date
+  restricao_uso?: string;            // Usage Restriction
+  estado_material?: string;          // Material Status
+  tipo_material?: string;            // Material Type
+  preco?: number;                    // Price
+  tipo_aquisicao?: string;           // Acquisition Type
+  data_alteracao_estado?: string;    // Status Change Date
   
   // Metadata
   createdAt?: Date;
   updatedAt?: Date;
   lastImportedAt?: Date;
+}
+
+export interface LoanDocument {
+  _id?: ObjectId;
+  book_codigo: string;               // Links to BookDocument.codigo
+  
+  // Borrower information
+  borrower_name: string;             // Required
+  borrower_email?: string;           // Optional
+  borrower_phone?: string;           // Optional
+  borrower_id?: string;              // Government ID (CPF, passport, etc.) - Optional
+  borrower_address?: string;         // Optional
+  
+  // Loan timeline
+  loan_date: Date;                   // When borrowed
+  original_return_date: Date;        // Initial return date (loan_date + 21 days)
+  current_return_date: Date;         // Current return date (changes on extension)
+  returned_date: Date | null;        // Actual return date (null = active)
+  
+  // Loan metadata
+  extensions: number;                // Number of times extended
+  status: 'active' | 'returned' | 'overdue';
+  notes?: string;                    // Admin notes about the loan
+  
+  // Audit
+  createdAt: Date;
+  updatedAt: Date;
+  created_by?: string;               // Admin who created the loan
+  returned_by?: string;              // Admin who marked as returned
 }
 
 // CSV column mapping (Korean to Portuguese/System fields)

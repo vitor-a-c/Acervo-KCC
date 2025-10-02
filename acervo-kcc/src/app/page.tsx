@@ -7,6 +7,7 @@ import { useLanguage, formatString } from '@/contexts/LanguageContext';
 import { getMainCategories, getSubcategories, getDetailedTheme } from '@/utils/hybridKdcUtils';
 import { Translations } from '@/lib/translations';
 import LibraryLayoutModal, { isValidShelfLocation, findShelfForLocation } from '@/components/LibraryLayoutModal';
+import { isOverdue } from '@/utils/dateUtils';
 
 const BOOKS_PER_PAGE = 12;
 
@@ -461,12 +462,19 @@ export default function HomePage() {
                     </div>
                     
                     {book['Emprestado?'] === 'TRUE' && book['Posição'] !== 'Indisponível' && (
-                      <div className="text-right">
-                        <p className="text-xs text-red-600 font-medium">
-                          ⏳ {t.book.return} {book['Data prevista de retorno']}
-                        </p>
-                      </div>
-                    )}
+                    <div className="text-right">
+                      <p className={`text-xs font-medium ${
+                        isOverdue(book['Data prevista de retorno']) 
+                          ? 'text-red-600' 
+                          : 'text-gray-600'
+                      }`}>
+                        {t.book.return} {book['Data prevista de retorno']}
+                        {isOverdue(book['Data prevista de retorno']) && (
+                          <span className="ml-1">({t.loans.overdue})</span>
+                        )}
+                      </p>
+                    </div>
+                  )}
                   </div>
 
                   {/* Show in Layout Button or Special Location Badge */}
