@@ -1,3 +1,6 @@
+import { loadComponents } from "next/dist/server/load-components";
+import { title } from "process";
+
 export type Language = 'pt' | 'ko' | 'en';
 
 export interface Translations {
@@ -9,7 +12,7 @@ export interface Translations {
     about: string;
     contact: string;
   };
-  
+
   // Hero Section
   hero: {
     title: string;
@@ -17,7 +20,7 @@ export interface Translations {
     searchPlaceholder: string;
     viewLayout: string;
   };
-  
+
   // Filters
   filters: {
     filters: string;
@@ -33,7 +36,7 @@ export interface Translations {
     booksFound: string;
     bookFound: string;
   };
-  
+
   // Book Card
   book: {
     author: string;
@@ -48,7 +51,7 @@ export interface Translations {
     borrowed: string;
     unavailable: string;
   };
-  
+
   // Pagination
   pagination: {
     previous: string;
@@ -59,7 +62,7 @@ export interface Translations {
     results: string;
     page: string;
   };
-  
+
   // States
   states: {
     loading: string;
@@ -68,7 +71,7 @@ export interface Translations {
     noBooksFound: string;
     adjustFilters: string;
   };
-  
+
   // Footer
   footer: {
     aboutKcc: string;
@@ -84,91 +87,96 @@ export interface Translations {
 
   // Loan Section
   loans: {
-  // Actions
-  borrow: string;
-  return: string;
-  extend: string;
-  viewLoan: string;
-  manageLoan: string;
-  
-  // Titles
-  borrowBook: string;
-  returnBook: string;
-  extendLoan: string;
-  loanDetails: string;
-  activeLoan: string;
-  loanHistory: string;
-  
-  // Borrower Information
-  borrowerInfo: string;
-  borrowerName: string;
-  borrowerEmail: string;
-  borrowerPhone: string;
-  borrowerId: string;
-  borrowerAddress: string;
-  borrowerNameRequired: string;
-  
-  // Dates
-  loanDate: string;
-  returnDate: string;
-  originalReturnDate: string;
-  currentReturnDate: string;
-  returnedDate: string;
-  daysRemaining: string;
-  dueIn: string;
-  
-  // Status
-  overdue: string;
-  overdueDays: string;
-  overdueBy: string;
-  extended: string;
-  timesExtended: string;
-  canExtend: string;
-  cannotExtend: string;
-  maxExtensionsReached: string;
-  noActiveLoan: string;
-  
-  // Filters
-  showOnlyOverdue: string;
-  showOnlyActive: string;
-  showAll: string;
-  
-  // Confirmations
-  confirmReturn: string;
-  confirmReturnMessage: string;
-  confirmExtend: string;
-  confirmExtendMessage: string;
-  
-  // Success Messages
-  bookBorrowed: string;
-  bookReturned: string;
-  loanExtended: string;
-  loanCreated: string;
-  loanUpdated: string;
-  
-  // Notes
-  notes: string;
-  addNotes: string;
-  notesPlaceholder: string;
-  
-  // Errors
-  errors: {
-    alreadyBorrowed: string;
-    notBorrowed: string;
-    failedToCreate: string;
-    failedToExtend: string;
-    failedToReturn: string;
-    failedToLoad: string;
-    bookNotFound: string;
-    loanNotFound: string;
-  };
-}
-  
+    // Actions
+    borrow: string;
+    return: string;
+    extend: string;
+    viewLoan: string;
+    manageLoan: string;
+
+    // Titles
+    borrowBook: string;
+    returnBook: string;
+    extendLoan: string;
+    loanDetails: string;
+    activeLoan: string;
+    loanHistory: string;
+
+    // Borrower Information
+    borrowerInfo: string;
+    borrowerName: string;
+    borrowerEmail: string;
+    borrowerPhone: string;
+    borrowerId: string;
+    borrowerAddress: string;
+    borrowerNameRequired: string;
+
+    // Dates
+    loanDate: string;
+    returnDate: string;
+    originalReturnDate: string;
+    currentReturnDate: string;
+    returnedDate: string;
+    daysRemaining: string;
+    dueIn: string;
+
+    // Status
+    overdue: string;
+    overdueDays: string;
+    overdueBy: string;
+    extended: string;
+    timesExtended: string;
+    canExtend: string;
+    cannotExtend: string;
+    maxExtensionsReached: string;
+    noActiveLoan: string;
+
+    // Filters
+    showOnlyOverdue: string;
+    showOnlyActive: string;
+    showAll: string;
+
+    // Confirmations
+    confirmReturn: string;
+    confirmReturnMessage: string;
+    confirmExtend: string;
+    confirmExtendMessage: string;
+
+    // Success Messages
+    bookBorrowed: string;
+    bookReturned: string;
+    loanExtended: string;
+    loanCreated: string;
+    loanUpdated: string;
+
+    // Notes
+    notes: string;
+    addNotes: string;
+    notesPlaceholder: string;
+
+    // Errors
+    errors: {
+      alreadyBorrowed: string;
+      notBorrowed: string;
+      failedToCreate: string;
+      failedToExtend: string;
+      failedToReturn: string;
+      failedToLoad: string;
+      bookNotFound: string;
+      loanNotFound: string;
+    };
+  }
+
   // Admin Section
   admin: {
     title: string;
     authError: string;
     tabs: {
+      loansNew: string;
+      loansManage: string;
+      books: string;
+      usersManage: string;
+      usersImport: string;
       manage: string;
       csvUpload: string;
     };
@@ -325,6 +333,163 @@ export interface Translations {
         selectButton: string;
       };
     };
+    userImport: {
+      title: string;
+      selectFile: string;
+      hint: string;
+      importButton: string;
+      importing: string;
+      results: {
+        title: string;
+        total: string;
+        processed?: string;
+        imported: string;
+        skipped: string;
+        errors: string;
+      };
+    };
+    userManagement: {
+      title: string;
+      loading: string;
+      noUsers: string;
+      searchPlaceholder: string;
+      searchButton: string;
+      clearButton: string;
+      activeLoans: string;
+      showingUsers: string;
+      columns: {
+        name: string;
+        contact: string;
+        id: string;
+        loans: string;
+        actions: string;
+      };
+      actions: {
+        edit: string;
+        delete: string;
+        save: string;
+        cancel: string;
+      };
+      messages: {
+        userUpdated: string;
+        userDeleted: string;
+        cannotDeleteWithLoans: string;
+      };
+      deleteConfirm: {
+        title: string;
+        message: string;
+        deleteButton: string;
+      };
+    };
+    loanManagement: {
+      title: string;
+      loading: string;
+      noLoans: string;
+      searchPlaceholder: string;
+      searchButton: string;
+      clearButton: string;
+      filters: {
+        all: string;
+        active: string;
+        overdue: string;
+        returned: string;
+      };
+      columns: {
+        user: string;
+        books: string;
+        loanDate: string;
+        returnDate: string;
+        status: string;
+        actions: string;
+      };
+      actions: {
+        extend: string;
+        return: string;
+        edit: string;
+        delete: string;
+        save: string;
+        cancel: string;
+      };
+      status: {
+        active: string;
+        overdue: string;
+        returned: string;
+        extended: string;
+        alreadyExtended: string;
+      };
+      details: {
+        bookCount: string;
+        view: string;
+        notFound: string;
+        daysLeft: string;
+        daysOverdue: string;
+        returnedOn: string;
+      };
+      messages: {
+        extendSuccess: string;
+        returnSuccess: string;
+        updateSuccess: string;
+        deleteSuccess: string;
+        confirmReturn: string;
+        confirmDelete: string;
+      };
+    };
+    newLoan: {
+      title: string;
+      clearForm: string;
+      userSection: {
+        title: string;
+        nameLabel: string;
+        searchPlaceholder: string;
+        addNew: string;
+        noUserFound: string;
+        noInfo: string;
+        searching: string;
+        fields: {
+          email: string;
+          phone: string;
+          id: string;
+          address: string;
+        };
+        loanInfo: {
+          activeLoans: string;
+          noLoans: string;
+          hasOverdue: string;
+          overdueDetails: string;
+        };
+      };
+      booksSection: {
+        title: string;
+        placeholder: string;
+        tip: string;
+        detected: string;
+        validating: string;
+        found: string;
+        notFound: string;
+        remove: string;
+      };
+      dateSection: {
+        loanDate: string;
+        returnDate: string;
+        returnDays: string;
+      };
+      notes: {
+        title: string;
+        placeholder: string;
+      };
+      actions: {
+        clear: string;
+        submit: string;
+        submitting: string;
+      };
+      messages: {
+        selectUser: string;
+        addBooks: string;
+        success: string;
+        error: string;
+        failedToCreate: string;
+      };
+    };
   };
 }
 
@@ -462,6 +627,11 @@ export const translations: Record<Language, Translations> = {
       title: "Administração da Biblioteca",
       authError: "Erro de autenticação",
       tabs: {
+        loansNew: "Novo Empréstimo",
+        loansManage: "Gerenciar Empréstimos",
+        books: "Gerenciar Livros",
+        usersManage: "Gerenciar Usuários",
+        usersImport: "Importar Usuários",
         manage: "Gerenciar Livros",
         csvUpload: "Upload CSV"
       },
@@ -539,7 +709,7 @@ export const translations: Record<Language, Translations> = {
           failedToDelete: "Falha ao excluir livro",
           failedToUpdate: "Falha ao atualizar livros",
           errorUpdating: "Erro ao atualizar livros",
-          authenticationError: "Erro de autenticaÃ§Ã£o"
+          authenticationError: "Erro de autenticação"
         },
         fields: {
           code: "Código",
@@ -617,12 +787,174 @@ export const translations: Record<Language, Translations> = {
           tip: "Dica: Você pode copiar códigos do Excel ou de qualquer lista e colá-los aqui. Separe os códigos com vírgulas.",
           selectButton: "Selecionar {count} Livro(s)"
         }
+      },
+      userImport: {
+        title: "Importar Usuários via CSV",
+        selectFile: "Selecione o arquivo CSV",
+        hint: "Esperado: colunas com nome, email, telefone, CPF/RG, endereço",
+        importButton: "Importar Usuários",
+        importing: "Importando...",
+        results: {
+          title: "Resultados da Importação",
+          total: "Total de registros:",
+          processed: "Processados:",
+          imported: "Importados:",
+          skipped: "Ignorados (duplicados):",
+          errors: "Erros"
+        }
+      },
+      userManagement: {
+        title: "Gestão de Usuários",
+        loading: "Carregando usuários...",
+        noUsers: "Nenhum usuário encontrado",
+        searchPlaceholder: "Buscar por nome, email, telefone ou CPF...",
+        searchButton: "Buscar",
+        clearButton: "Limpar",
+        activeLoans: "ativos",
+        showingUsers: "Mostrando {start} até {end} de {total} usuários",
+        columns: {
+          name: "Nome",
+          contact: "Contato",
+          id: "CPF/RG",
+          loans: "Empréstimos",
+          actions: "Ações"
+        },
+        actions: {
+          edit: "Editar",
+          delete: "Excluir",
+          save: "Salvar",
+          cancel: "Cancelar"
+        },
+        messages: {
+          userUpdated: "Usuário atualizado com sucesso",
+          userDeleted: "Usuário excluído com sucesso",
+          cannotDeleteWithLoans: "Não é possível excluir usuário com empréstimos ativos"
+        },
+        deleteConfirm: {
+          title: "Confirmar Exclusão",
+          message: "Tem certeza que deseja excluir o usuário '{name}'?",
+          deleteButton: "Excluir"
+        }
+      },
+      loanManagement: {
+        title: "Gestão de Empréstimos",
+        loading: "Carregando empréstimos...",
+        noLoans: "Nenhum empréstimo encontrado",
+        searchPlaceholder: "Buscar por nome do usuário...",
+        searchButton: "Buscar",
+        clearButton: "Limpar",
+        filters: {
+          all: "Todos",
+          active: "Ativos",
+          overdue: "Atrasados",
+          returned: "Devolvidos"
+        },
+        columns: {
+          user: "Usuário",
+          books: "Livros",
+          loanDate: "Data Empréstimo",
+          returnDate: "Devolução",
+          status: "Status",
+          actions: "Ações"
+        },
+        actions: {
+          extend: "Prorrogar",
+          return: "Devolver",
+          edit: "Editar",
+          delete: "Excluir",
+          save: "Salvar",
+          cancel: "Cancelar"
+        },
+        status: {
+          active: "Ativo",
+          overdue: "Atrasado",
+          returned: "Devolvido",
+          extended: "Prorrogado",
+          alreadyExtended: "Já prorrogado"
+        },
+        details: {
+          bookCount: "{count} livro(s)",
+          view: "ver",
+          notFound: "Não encontrado",
+          daysLeft: "{days} dias restantes",
+          daysOverdue: "{days} dias atrasado",
+          returnedOn: "Devolvido: {date}"
+        },
+        messages: {
+          extendSuccess: "Empréstimo prorrogado por 21 dias",
+          returnSuccess: "Livros devolvidos com sucesso",
+          updateSuccess: "Empréstimo atualizado",
+          deleteSuccess: "Empréstimo excluído",
+          confirmReturn: "Confirmar devolução de {count} livro(s)?",
+          confirmDelete: "Tem certeza que deseja excluir este empréstimo de {count} livro(s)?"
+        }
+      },
+      newLoan: {
+        title: "Novo Empréstimo",
+        clearForm: "Limpar Formulário",
+        userSection: {
+          title: "Informações do Usuário (opcional)",
+          nameLabel: "Nome do Usuário *",
+          searchPlaceholder: "Digite para buscar ou adicionar novo usuário...",
+          addNew: "Adicionar \"{name}\" como novo usuário",
+          noUserFound: "Nenhum usuário encontrado",
+          noInfo: "Sem informações",
+          searching: "Buscando...",
+          fields: {
+            email: "E-mail",
+            phone: "Telefone",
+            id: "CPF/RG",
+            address: "Endereço"
+          },
+          loanInfo: {
+            activeLoans: "{count} empréstimo(s)",
+            noLoans: "Sem empréstimos",
+            hasOverdue: "Atrasado",
+            overdueDetails: "Vencimento: {date} ({days} dias)"
+          }
+        },
+        booksSection: {
+          title: "Códigos dos Livros *",
+          placeholder: "Digite códigos separados por vírgulas\nExemplo: EM2112, A0001, EM2113",
+          tip: "Dica: Cole códigos do Excel separados por vírgulas. Use formato curto (ex: EM2112) ou completo.",
+          detected: "{count} livro(s) detectado(s)",
+          validating: "Validando...",
+          found: "→ {title}",
+          notFound: "→ Não encontrado (pode editar depois)",
+          remove: "Remover"
+        },
+        dateSection: {
+          loanDate: "Data do Empréstimo *",
+          returnDate: "Data de Devolução (Inicial)",
+          returnDays: "({days} dias)"
+        },
+        notes: {
+          title: "Observações",
+          placeholder: "Notas sobre o empréstimo..."
+        },
+        actions: {
+          clear: "Limpar",
+          submit: "Registrar Empréstimo",
+          submitting: "Registrando..."
+        },
+        messages: {
+          selectUser: "Selecione ou adicione um usuário",
+          addBooks: "Adicione pelo menos um código de livro",
+          success: "Empréstimo criado com sucesso! {count} livro(s) emprestado(s).",
+          error: "Erro ao criar empréstimo",
+          failedToCreate: "Falha ao criar empréstimo"
+        }
       }
     }
   },
-  
   ko: {
-    header: { title: "한국문화원", subtitle: "디지털 아카이브", library: "도서관", about: "소개", contact: "연락처" },
+    header: {
+      title: "한국문화원",
+      subtitle: "디지털 아카이브",
+      library: "도서관",
+      about: "소개",
+      contact: "연락처"
+    },
     hero: {
       title: "디지털 아카이브",
       description: "현재 {count}개의 자료가 등록되어 있습니다.",
@@ -748,6 +1080,11 @@ export const translations: Record<Language, Translations> = {
       title: "도서관 관리",
       authError: "인증 오류",
       tabs: {
+        loansNew: "새 대출",
+        loansManage: "대출 관리",
+        books: "도서 관리",
+        usersManage: "사용자 관리",
+        usersImport: "사용자 가져오기",
         manage: "도서관 관리",
         csvUpload: "CSV 업로드"
       },
@@ -903,10 +1240,165 @@ export const translations: Record<Language, Translations> = {
           tip: "팁: 붙여넣기할 코드를 목록 형식으로 입력하세요. 예: EM0001, EM0002, EM0003.",
           selectButton: "{count}개 선택"
         }
+      },
+      userImport: {
+        title: "CSV로 사용자 가져오기",
+        selectFile: "CSV 파일 선택",
+        hint: "이름, 이메일, 전화번호, 신분증 번호, 주소 컬럼 필요",
+        importButton: "사용자 가져오기",
+        importing: "가져오는 중...",
+        results: {
+          title: "가져오기 결과",
+          total: "총 {count}개 레코드:",
+          imported: "가져온 레코드:",
+          skipped: "건너뛴 레코드 (중복):",
+          errors: "오류"
+        }
+      },
+      loanManagement: {
+        title: "대출 관리",
+        loading: "대출 정보 로딩 중...",
+        noLoans: "대출 정보가 없습니다.",
+        searchPlaceholder: "사용자 이름으로 검색...",
+        searchButton: "검색",
+        clearButton: "초기화",
+        filters: {
+          all: "전체",
+          active: "진행 중",
+          overdue: "연체",
+          returned: "반납 완료"
+        },
+        columns: {
+          user: "사용자",
+          books: "도서",
+          loanDate: "대출일",
+          returnDate: "반납 예정일",
+          status: "상태",
+          actions: "작업"
+        },
+        actions: {
+          extend: "연장",
+          return: "반납",
+          edit: "수정",
+          delete: "삭제",
+          save: "저장",
+          cancel: "취소"
+        },
+        status: {
+          active: "진행 중",
+          overdue: "연체",
+          returned: "반납 완료",
+          extended: "연장됨",
+          alreadyExtended: "이미 연장됨"
+        },
+        details: {
+          bookCount: "{count}권",
+          view: "보기",
+          notFound: "찾을 수 없음",
+          daysLeft: "{days}일 남음",
+          daysOverdue: "{days}일 연체",
+          returnedOn: "반납일: {date}"
+        },
+        messages: {
+          extendSuccess: "대출이 21일 연장되었습니다.",
+          returnSuccess: "도서가 성공적으로 반납되었습니다.",
+          updateSuccess: "대출 정보가 업데이트되었습니다.",
+          deleteSuccess: "대출 정보가 삭제되었습니다.",
+          confirmReturn: "{count}권 도서 반납을 확인하시겠습니까?",
+          confirmDelete: "이 대출 정보를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        }
+      },
+      newLoan: {
+        title: "새 대출",
+        clearForm: "양식 초기화",
+        userSection: {
+          title: "사용자 정보 (선택 사항)",
+          nameLabel: "사용자 이름 *",
+          searchPlaceholder: "검색하거나 새 사용자 추가...",
+          addNew: "\"{name}\" 새 사용자로 추가",
+          noUserFound: "사용자를 찾을 수 없음",
+          noInfo: "정보 없음",
+          searching: "검색 중...",
+          fields: {
+            email: "이메일",
+            phone: "전화번호",
+            id: "신분증 번호",
+            address: "주소"
+          },
+          loanInfo: {
+            activeLoans: "{count}건의 대출",
+            noLoans: "대출 없음",
+            hasOverdue: "연체 중",
+            overdueDetails: "반납 예정일: {date} ({days}일 연체)"
+          }
+        },
+        booksSection: {
+          title: "도서 코드 *",
+          placeholder: "쉼표로 구분된 도서 코드 입력\n예: EM2112, A0001, EM2113",
+          tip: "팁: 쉼표로 구분된 도서 코드를 붙여넣기하세요. 예: EM2112, A0001, EM2113.",
+          detected: "{count}권의 도서가 감지되었습니다.",
+          validating: "검증 중...",
+          found: "→ {title}",
+          notFound: "→ 찾을 수 없음 (나중에 수정 가능)",
+          remove: "제거"
+        },
+        dateSection: {
+          loanDate: "대출일 *",
+          returnDate: "반납 예정일",
+          returnDays: "({days}일)"
+        },
+        notes: {
+          title: "메모",
+          placeholder: "대출 관련 메모..."
+        },
+        actions: {
+          clear: "초기화",
+          submit: "대출 등록",
+          submitting: "등록 중..."
+        },
+        messages: {
+          selectUser: "사용자를 선택하거나 추가하세요.",
+          addBooks: "최소한 하나의 도서 코드를 추가하세요.",
+          success: "대출이 성공적으로 생성되었습니다! {count}권의 도서가 대출되었습니다.",
+          error: "대출 생성 중 오류가 발생했습니다.",
+          failedToCreate: "대출 생성에 실패했습니다."
+        }
+      },
+      userManagement: {
+        title: "",
+        loading: "",
+        noUsers: "",
+        searchPlaceholder: "",
+        searchButton: "",
+        clearButton: "",
+        activeLoans: "",
+        showingUsers: "",
+        columns: {
+          name: "",
+          contact: "",
+          id: "",
+          loans: "",
+          actions: ""
+        },
+        actions: {
+          edit: "",
+          delete: "",
+          save: "",
+          cancel: ""
+        },
+        messages: {
+          userUpdated: "",
+          userDeleted: "",
+          cannotDeleteWithLoans: ""
+        },
+        deleteConfirm: {
+          title: "",
+          message: "",
+          deleteButton: ""
+        }
       }
     }
   },
-  
   en: {
     header: {
       title: "Korean Cultural Center",
@@ -1040,6 +1532,11 @@ export const translations: Record<Language, Translations> = {
       title: "Library Administration",
       authError: "Authentication error",
       tabs: {
+        loansNew: "New Loan",
+        loansManage: "Manage Loans",
+        books: "Manage Books",
+        usersManage: "Manage Users",
+        usersImport: "Import Users",
         manage: "Manage Books",
         csvUpload: "CSV Upload"
       },
@@ -1175,7 +1672,7 @@ export const translations: Record<Language, Translations> = {
           markAsBorrowed: "Mark as borrowed",
           selectLevel: "Select level...",
           enterNewLocation: "Enter new location...",
-          warningMessage: "âš ï¸ This will update the {field} for all {count} selected books.",
+          warningMessage: "⚠️ This will update the {field} for all {count} selected books.",
           updateButton: "Update Books"
         },
         deleteConfirm: {
@@ -1192,8 +1689,165 @@ export const translations: Record<Language, Translations> = {
           label: "Paste Book Codes",
           placeholder: "Enter codes separated by commas\nExample: EM0001, EM0002, EM0003",
           codesDetected: "{count} code(s) detected",
-          tip: "ðŸ'¡ Tip: You can copy codes from Excel or any list and paste them here. Separate codes with commas.",
+          tip: "💡 Tip: You can copy codes from Excel or any list and paste them here. Separate codes with commas.",
           selectButton: "Select {count} Book(s)"
+        }
+      },
+      userImport: {
+        title: "Import Users via CSV",
+        selectFile: "Select CSV file",
+        hint: "Expected: columns with name, email, phone, ID number, address",
+        importButton: "Import Users",
+        importing: "Importing...",
+        results: {
+          title: "Import Results",
+          total: "Total records:",
+          processed: "Processed:",
+          imported: "Imported:",
+          skipped: "Skipped (duplicates):",
+          errors: "Errors"
+        }
+      },
+      loanManagement: {
+        title: "Manage Loans",
+        loading: "Loading loans...",
+        noLoans: "No loans found",
+        searchPlaceholder: "Search by user name...",
+        searchButton: "Search",
+        clearButton: "Clear",
+        filters: {
+          all: "All",
+          active: "Active",
+          overdue: "Overdue",
+          returned: "Returned"
+        },
+        columns: {
+          user: "User",
+          books: "Books",
+          loanDate: "Loan Date",
+          returnDate: "Return Date",
+          status: "Status",
+          actions: "Actions"
+        },
+        actions: {
+          extend: "Extend",
+          return: "Return",
+          edit: "Edit",
+          delete: "Delete",
+          save: "Save",
+          cancel: "Cancel"
+        },
+        status: {
+          active: "Active",
+          overdue: "Overdue",
+          returned: "Returned",
+          extended: "Extended",
+          alreadyExtended: "Already Extended"
+        },
+        details: {
+          bookCount: "{count} book(s)",
+          view: "view",
+          notFound: "Not found",
+          daysLeft: "{days} days left",
+          daysOverdue: "{days} days overdue",
+          returnedOn: "Returned on: {date}"
+        },
+        messages: {
+          extendSuccess: "Loan extended by 21 days",
+          returnSuccess: "Books returned successfully",
+          updateSuccess: "Loan updated",
+          deleteSuccess: "Loan deleted",
+          confirmReturn: "Confirm return of {count} book(s)?",
+          confirmDelete: "Are you sure you want to delete this loan of {count} book(s)? This action cannot be undone."
+        }
+      },
+      newLoan: {
+        title: "New Loan",
+        clearForm: "Clear Form",
+        userSection: {
+          title: "Borrower Information (optional)",
+          nameLabel: "Borrower Name *",
+          searchPlaceholder: "Type to search or add new user...",
+          addNew: "Add \"{name}\" as new user",
+          noUserFound: "No user found",
+          noInfo: "No information",
+          searching: "Searching...",
+          fields: {
+            email: "Email",
+            phone: "Phone",
+            id: "ID Number",
+            address: "Address"
+          },
+          loanInfo: {
+            activeLoans: "{count} active loan(s)",
+            noLoans: "No active loans",
+            hasOverdue: "Has overdue loans",
+            overdueDetails: "Due: {date} ({days} days overdue)"
+          }
+        },
+        booksSection: {
+          title: "Book Codes *",
+          placeholder: "Type comma-separated book codes\nExample: EM2112, A0001, EM2113",
+          tip: "Tip: Paste comma-separated book codes copied from Excel or any list. Use short (e.g. EM2112) or full format.",
+          detected: "{count} book(s) detected",
+          validating: "Validating...",
+          found: "→ {title}",
+          notFound: "→ Not found (can edit later)",
+          remove: "Remove"
+        },
+        dateSection: {
+          loanDate: "Loan Date *",
+          returnDate: "Return Date (initial)",
+          returnDays: "({days} days)"
+        },
+        notes: {
+          title: "Notes",
+          placeholder: "Type your notes here..."
+        },
+        actions: {
+          clear: "Clear",
+          submit: "Register Loan",
+          submitting: "Submitting..."
+        },
+        messages: {
+          selectUser: "Select or add a user",
+          addBooks: "Add at least one book code",
+          success: "Loan created successfully! {count} book(s) borrowed.",
+          error: "Error creating loan",
+          failedToCreate: "Failed to create loan"
+        }
+      },
+      userManagement: {
+        title: "",
+        loading: "",
+        noUsers: "",
+        searchPlaceholder: "",
+        searchButton: "",
+        clearButton: "",
+        activeLoans: "",
+        showingUsers: "",
+        columns: {
+          name: "",
+          contact: "",
+          id: "",
+          loans: "",
+          actions: ""
+        },
+        actions: {
+          edit: "",
+          delete: "",
+          save: "",
+          cancel: ""
+        },
+        messages: {
+          userUpdated: "",
+          userDeleted: "",
+          cannotDeleteWithLoans: ""
+        },
+        deleteConfirm: {
+          title: "",
+          message: "",
+          deleteButton: ""
         }
       }
     }

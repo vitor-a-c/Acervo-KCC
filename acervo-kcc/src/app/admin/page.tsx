@@ -1,17 +1,25 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Papa from 'papaparse';
 import BookTable from '@/components/admin/BookTable';
+import NewLoanForm from '@/components/admin/NewLoanForm';
+import LoanManagementTable from '@/components/admin/LoanManagementTable';
+import UserManagementTable from '@/components/admin/UserManagementTable';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getTranslation } from '@/lib/translations';
 
 interface UploadStatus {
   total: number;
   processed: number;
-  added: number;
-  updated: number;
+  // For book uploads:
+  added?: number;
+  updated?: number;
+  // For user imports:
+  imported?: number;
+  skipped?: number;
+  // Common:
   errors: string[];
 }
 
@@ -29,7 +37,8 @@ export default function AdminPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [csvPreview, setCsvPreview] = useState<CSVRow[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [activeTab, setActiveTab] = useState<'manage' | 'upload'>('manage');
+  const [activeTab, setActiveTab] = useState<'loans-new' | 'loans-manage' | 'books' | 'users-manage' | 'users-import'>('loans-new');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Handle authentication
   const handleLogin = async (e: React.FormEvent) => {
@@ -54,18 +63,15 @@ export default function AdminPage() {
     }
   };
 
-  // Handle CSV file drop
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+  // Handle CSV file drop (for books)
+  const onDrop = async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
 
     setSelectedFile(file);
     
     try {
-      // Read file content as text
       const text = await file.text();
-      
-      // Parse CSV for preview
       const parseResult = Papa.parse<CSVRow>(text, {
         header: true,
         preview: 5,
@@ -74,8 +80,6 @@ export default function AdminPage() {
       });
       
       if (parseResult.errors && parseResult.errors.length > 0) {
-        console.error('CSV parsing errors:', parseResult.errors);
-        // Only show alert for critical errors
         const criticalErrors = parseResult.errors.filter(e => e.type === 'Quotes' || e.type === 'FieldMismatch');
         if (criticalErrors.length > 0) {
           alert('Error reading CSV file: ' + criticalErrors[0].message);
@@ -88,7 +92,7 @@ export default function AdminPage() {
       console.error('Error reading file:', error);
       alert('Error reading CSV file');
     }
-  }, []);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -100,8 +104,8 @@ export default function AdminPage() {
     multiple: false
   });
 
-  // Handle CSV upload
-  const handleUpload = async () => {
+  // Handle book CSV upload
+  const handleBookUpload = async () => {
     if (!selectedFile) {
       alert('Please select a file first');
       return;
@@ -126,6 +130,7 @@ export default function AdminPage() {
       if (response.ok) {
         const result = await response.json();
         setUploadStatus(result);
+        setRefreshKey(prev => prev + 1);
       } else {
         const error = await response.json();
         alert(`${t.admin.upload.uploadFailed}: ${error.message}`);
@@ -135,6 +140,48 @@ export default function AdminPage() {
       alert(`${t.admin.upload.uploadFailed}. Please check the console for details.`);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  // Handle user CSV upload
+  const [userFile, setUserFile] = useState<File | null>(null);
+  const [userUploadStatus, setUserUploadStatus] = useState<UploadStatus | null>(null);
+  const [isUploadingUsers, setIsUploadingUsers] = useState(false);
+
+  const handleUserUpload = async () => {
+    if (!userFile) {
+      alert(t.admin.userImport.selectFile);
+      return;
+    }
+
+    setIsUploadingUsers(true);
+    setUserUploadStatus(null);
+
+    const formData = new FormData();
+    formData.append('file', userFile);
+    
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setUserUploadStatus(result);
+      } else {
+        const error = await response.json();
+        alert(`${t.admin.upload.uploadFailed}: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert(t.admin.authError);
+    } finally {
+      setIsUploadingUsers(false);
     }
   };
 
@@ -183,181 +230,157 @@ export default function AdminPage() {
         {/* Header with Tabs */}
         <div className="bg-white rounded-t-lg shadow-lg">
           <div className="border-b border-gray-200">
-            <div className="flex">
+            <div className="flex overflow-x-auto">
               <button
-                onClick={() => setActiveTab('manage')}
-                className={`px-8 py-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'manage'
+                onClick={() => setActiveTab('loans-new')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === 'loans-new'
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {t.admin.tabs.manage}
+                {t.admin.tabs.loansNew}
               </button>
               <button
-                onClick={() => setActiveTab('upload')}
-                className={`px-8 py-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'upload'
+                onClick={() => setActiveTab('loans-manage')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === 'loans-manage'
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {t.admin.tabs.csvUpload}
+                {t.admin.tabs.loansManage}
+              </button>
+              <button
+                onClick={() => setActiveTab('books')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === 'books'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {t.admin.tabs.books}
+              </button>
+              <button
+                onClick={() => setActiveTab('users-manage')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === 'users-manage'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {t.admin.tabs.usersManage}
+              </button>
+              <button
+                onClick={() => setActiveTab('users-import')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === 'users-import'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {t.admin.tabs.usersImport}
               </button>
             </div>
           </div>
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'manage' ? (
-          <BookTable token={localStorage.getItem('adminToken')} />
-        ) : (
-          <div className="bg-white rounded-b-lg shadow-lg p-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8">
-              {t.admin.upload.title}
-            </h1>
+        <div className="mt-6">
+          {activeTab === 'loans-new' && (
+            <NewLoanForm
+              token={localStorage.getItem('adminToken')}
+              onSuccess={() => setRefreshKey(prev => prev + 1)}
+            />
+          )}
 
-            {/* File Upload Area */}
-            <div className="mb-8">
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                  isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                <input {...getInputProps()} />
-                <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                {selectedFile ? (
-                  <div>
-                    <p className="text-lg font-medium text-gray-900">{selectedFile.name}</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {(selectedFile.size / 1024).toFixed(2)} {t.admin.upload.fileSize}
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-lg font-medium text-gray-900">
-                      {t.admin.upload.dropzone}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-2">
-                      {t.admin.upload.dropzoneHint}
-                    </p>
-                  </div>
-                )}
+          {activeTab === 'loans-manage' && (
+            <LoanManagementTable
+              key={refreshKey}
+              token={localStorage.getItem('adminToken')}
+              onUpdate={() => setRefreshKey(prev => prev + 1)}
+            />
+          )}
+
+          {activeTab === 'books' && (
+            <BookTable token={localStorage.getItem('adminToken')} />
+          )}
+
+          {activeTab === 'users-manage' && (
+            <UserManagementTable
+              token={localStorage.getItem('adminToken')} />
+          )}
+
+          {activeTab === 'users-import' && (
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                {t.admin.userImport.title}
+              </h2>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t.admin.userImport.selectFile}
+                </label>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => setUserFile(e.target.files?.[0] || null)}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  {t.admin.userImport.hint}
+                </p>
               </div>
-            </div>
-
-            {/* CSV Preview */}
-            {csvPreview.length > 0 && (
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  {t.admin.upload.preview}
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        {Object.keys(csvPreview[0]).slice(0, 6).map((key) => (
-                          <th key={key} className="px-4 py-2 text-left font-medium text-gray-900">
-                            {key}
-                          </th>
-                        ))}
-                        <th className="px-4 py-2 text-gray-500">...</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {csvPreview.map((row, idx) => (
-                        <tr key={idx}>
-                          {Object.values(row).slice(0, 6).map((val: string | number | undefined, i) => (
-                            <td key={i} className="px-4 py-2 text-gray-700">
-                              {val?.toString() || '-'}
-                            </td>
-                          ))}
-                          <td className="px-4 py-2 text-gray-400">...</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Upload Button */}
-            <div className="flex justify-between items-center">
-              <button
-                onClick={handleUpload}
-                disabled={!selectedFile || isUploading}
-                className="px-6 py-2 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                style={{backgroundColor: '#053863'}}
-              >
-                {isUploading ? (
-                  <span className="flex items-center">
-                    <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {t.admin.upload.processing}
-                  </span>
-                ) : (
-                  t.admin.upload.uploadButton
-                )}
-              </button>
 
               <button
-                onClick={() => {
-                  setSelectedFile(null);
-                  setCsvPreview([]);
-                  setUploadStatus(null);
-                }}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                onClick={handleUserUpload}
+                disabled={!userFile || isUploadingUsers}
+                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {t.admin.upload.clearButton}
+                {isUploadingUsers ? t.admin.userImport.importing : t.admin.userImport.importButton}
               </button>
-            </div>
 
-            {/* Upload Status */}
-            {uploadStatus && (
-              <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  {t.admin.upload.results.title}
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>{t.admin.upload.results.total}</span>
-                    <span className="font-medium">{uploadStatus.total}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>{t.admin.upload.results.processed}</span>
-                    <span className="font-medium">{uploadStatus.processed}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>{t.admin.upload.results.added}</span>
-                    <span className="font-medium text-green-600">{uploadStatus.added}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>{t.admin.upload.results.updated}</span>
-                    <span className="font-medium text-blue-600">{uploadStatus.updated}</span>
-                  </div>
-                </div>
-                
-                {uploadStatus.errors.length > 0 && (
-                  <div className="mt-4">
-                    <h4 className="text-sm font-semibold text-red-600 mb-2">
-                      {t.admin.upload.results.errors} ({uploadStatus.errors.length})
-                    </h4>
-                    <div className="max-h-32 overflow-y-auto bg-red-50 p-2 rounded text-xs text-red-700">
-                      {uploadStatus.errors.map((error, idx) => (
-                        <div key={idx}>{error}</div>
-                      ))}
+              {userUploadStatus && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    {t.admin.userImport.results.title}
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>{t.admin.userImport.results.total}</span>
+                      <span className="font-medium">{userUploadStatus.total}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>{t.admin.userImport.results.processed}</span>
+                      <span className="font-medium">{userUploadStatus.processed}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>{t.admin.userImport.results.imported}</span>
+                      <span className="font-medium text-green-600">{userUploadStatus.imported || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>{t.admin.userImport.results.skipped}</span>
+                      <span className="font-medium text-yellow-600">{userUploadStatus.skipped || 0}</span>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+                  
+                  {userUploadStatus.errors.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="text-sm font-semibold text-red-600 mb-2">
+                        {t.admin.userImport.results.errors} ({userUploadStatus.errors.length})
+                      </h4>
+                      <div className="max-h-32 overflow-y-auto bg-red-50 p-2 rounded text-xs text-red-700">
+                        {userUploadStatus.errors.map((error, idx) => (
+                          <div key={idx}>{error}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

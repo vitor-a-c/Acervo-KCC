@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
-import { LoanDocument, BookDocument } from '@/types/database';
-import { addDays, isOverdue } from '@/utils/dateUtils';
-import jwt from 'jsonwebtoken';
+import { LoanDocument, calculateLoanStatus } from '@/types/database';
 import { ObjectId } from 'mongodb';
+import jwt from 'jsonwebtoken';
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
@@ -25,7 +24,7 @@ function verifyAuth(request: NextRequest): boolean {
   }
 }
 
-// GET - List all loans with optional filters
+// GET - Fetch loans with filters
 export async function GET(request: NextRequest) {
   if (!verifyAuth(request)) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -33,87 +32,120 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status'); // 'active', 'returned', 'overdue', 'all'
-    const bookCodigo = searchParams.get('book_codigo');
-    
+    const status = searchParams.get('status') || 'all';
+    const search = searchParams.get('search') || '';
+
     const db = await getDatabase();
     const loansCollection = db.collection<LoanDocument>('loans');
-    const booksCollection = db.collection<BookDocument>('books');
-    
+    const booksCollection = db.collection('books');
+
     // Build query
-    const query: Record<string, unknown> = {};
-    
-    if (bookCodigo) {
-      query.book_codigo = bookCodigo;
-    }
-    
-    if (status && status !== 'all') {
-      if (status === 'overdue') {
-        query.status = 'active';
-        // We'll filter overdue in JavaScript after fetching
-      } else {
-        query.status = status;
+    const query: any = {};
+
+    // Status filter
+    if (status !== 'all') {
+      if (status === 'returned') {
+        query.actual_return_date = { $ne: null };
+      } else if (status === 'overdue') {
+        query.actual_return_date = null;
+        query.$expr = {
+          $lt: [
+            { $ifNull: ['$extended_return_date', '$initial_return_date'] },
+            new Date()
+          ]
+        };
+      } else if (status === 'active') {
+        query.actual_return_date = null;
       }
     }
-    
-    // Fetch loans
-    let loans = await loansCollection.find(query).sort({ createdAt: -1 }).toArray();
-    
-    // Update status for overdue loans
-    const now = new Date();
-    const loansToUpdate: string[] = [];
-    
-    loans = loans.map(loan => {
-      if (loan.status === 'active' && isOverdue(loan.current_return_date)) {
-        loansToUpdate.push(loan._id!.toString());
-        return { ...loan, status: 'overdue' as const };
-      }
-      return loan;
-    });
-    
-    // Update overdue loans in database
-    if (loansToUpdate.length > 0) {
-      await loansCollection.updateMany(
-        { _id: { $in: loansToUpdate.map(id => new ObjectId(id)) } },
-        { $set: { status: 'overdue', updatedAt: now } }
-      );
+
+    // Search by borrower name
+    if (search) {
+      query.borrower_name = { $regex: search, $options: 'i' };
     }
-    
-    // Filter overdue if requested
-    if (status === 'overdue') {
-      loans = loans.filter(loan => loan.status === 'overdue');
-    }
-    
-    // Enrich with book information
-    const loansWithBooks = await Promise.all(
+
+    const loans = await loansCollection
+      .find(query)
+      .sort({ loan_date: -1 })
+      .toArray();
+
+    // Enrich with book details and calculate status
+    const enrichedLoans = await Promise.all(
       loans.map(async (loan) => {
-        const book = await booksCollection.findOne({ codigo: loan.book_codigo });
+        // CRITICAL FIX: Check if book_codes exists and is an array
+        const bookCodes = Array.isArray(loan.book_codes) ? loan.book_codes : [];
+        
+        // Get book details
+        const bookDetails = await Promise.all(
+          bookCodes.map(async (code) => {
+            try {
+              const book = await booksCollection.findOne({ codigo: code });
+              return {
+                code,
+                title: book?.titulo,
+                author: book?.autor,
+                found: !!book
+              };
+            } catch (error) {
+              console.error(`Error fetching book ${code}:`, error);
+              return {
+                code,
+                found: false
+              };
+            }
+          })
+        );
+
+        // CRITICAL FIX: Handle missing dates from old/corrupt loans
+        // If dates are missing, calculate them or use defaults
+        let loanDate = loan.loan_date;
+        if (!loanDate || !(loanDate instanceof Date)) {
+          loanDate = loan.createdAt || new Date();
+        }
+
+        let initialReturnDate = loan.initial_return_date;
+        if (!initialReturnDate || !(initialReturnDate instanceof Date)) {
+          // Calculate default return date (21 days from loan date)
+          initialReturnDate = new Date(loanDate);
+          initialReturnDate.setDate(initialReturnDate.getDate() + 21);
+        }
+
+        // Calculate current status
+        const status = calculateLoanStatus({
+          ...loan,
+          loan_date: loanDate,
+          initial_return_date: initialReturnDate
+        } as LoanDocument);
+
         return {
-          loan: {
-            ...loan,
-            _id: loan._id!.toString(),
-            loan_date: loan.loan_date.toISOString(),
-            original_return_date: loan.original_return_date.toISOString(),
-            current_return_date: loan.current_return_date.toISOString(),
-            returned_date: loan.returned_date?.toISOString() || null,
-            createdAt: loan.createdAt.toISOString(),
-            updatedAt: loan.updatedAt.toISOString()
-          },
-          book: book ? {
-            codigo: book.codigo,
-            titulo: book.titulo,
-            autor: book.autor,
-            posicao: book.posicao
-          } : null
+          _id: loan._id?.toString(),
+          user_id: loan.user_id?.toString(),
+          borrower_name: loan.borrower_name,
+          borrower_email: loan.borrower_email,
+          borrower_phone: loan.borrower_phone,
+          borrower_id: loan.borrower_id,
+          borrower_address: loan.borrower_address,
+          book_codes: bookCodes,
+          book_count: bookCodes.length,
+          book_details: bookDetails,
+          loan_date: loanDate.toISOString(),
+          initial_return_date: initialReturnDate.toISOString(),
+          extended: loan.extended || false,
+          extended_return_date: loan.extended_return_date?.toISOString(),
+          actual_return_date: loan.actual_return_date?.toISOString(),
+          status,
+          notes: loan.notes,
+          createdAt: loan.createdAt?.toISOString(),
+          updatedAt: loan.updatedAt?.toISOString()
         };
       })
     );
-    
-    return NextResponse.json({ loans: loansWithBooks });
+
+    return NextResponse.json({ loans: enrichedLoans });
   } catch (error) {
     console.error('Error fetching loans:', error);
     return NextResponse.json(
-      { message: 'Error fetching loans' },
+      { message: 'Error fetching loans', error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -127,95 +159,95 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { book_codigo, borrower_name, borrower_email, borrower_phone, borrower_id, borrower_address, notes } = body;
-    
+    const {
+      user_id,
+      borrower_name,
+      borrower_email,
+      borrower_phone,
+      borrower_id,
+      borrower_address,
+      book_codes,
+      loan_date,
+      notes
+    } = body;
+
     // Validate required fields
-    if (!book_codigo || !borrower_name) {
+    if (!borrower_name || !book_codes || !Array.isArray(book_codes) || book_codes.length === 0) {
       return NextResponse.json(
-        { message: 'Missing required fields: book_codigo and borrower_name' },
+        { message: 'Missing required fields: borrower_name and book_codes' },
         { status: 400 }
       );
     }
-    
+
     const db = await getDatabase();
-    const booksCollection = db.collection<BookDocument>('books');
     const loansCollection = db.collection<LoanDocument>('loans');
-    
-    // Check if book exists
-    const book = await booksCollection.findOne({ codigo: book_codigo });
-    if (!book) {
-      return NextResponse.json(
-        { message: 'Book not found' },
-        { status: 404 }
-      );
-    }
-    
-    // Check if book is already borrowed
-    if (book.emprestado || book.current_loan_id) {
-      return NextResponse.json(
-        { message: 'Book is already borrowed' },
-        { status: 400 }
-      );
-    }
-    
+    const booksCollection = db.collection('books');
+    const usersCollection = db.collection('users');
+
     // Calculate dates
-    const loanDate = new Date();
-    const returnDate = addDays(loanDate, 21);
-    
+    const loanDateObj = loan_date ? new Date(loan_date) : new Date();
+    const initialReturnDate = new Date(loanDateObj);
+    initialReturnDate.setDate(initialReturnDate.getDate() + 21);
+
     // Create loan document
-    const loanDoc: LoanDocument = {
-      book_codigo,
-      borrower_name: borrower_name.trim(),
-      borrower_email: borrower_email?.trim() || undefined,
-      borrower_phone: borrower_phone?.trim() || undefined,
-      borrower_id: borrower_id?.trim() || undefined,
-      borrower_address: borrower_address?.trim() || undefined,
-      loan_date: loanDate,
-      original_return_date: returnDate,
-      current_return_date: returnDate,
-      returned_date: null,
-      extensions: 0,
+    const newLoan: LoanDocument = {
+      user_id: user_id ? new ObjectId(user_id) : undefined,
+      borrower_name,
+      borrower_email,
+      borrower_phone,
+      borrower_id,
+      borrower_address,
+      book_codes, // CRITICAL: Make sure this is saved
+      book_count: book_codes.length,
+      loan_date: loanDateObj,
+      initial_return_date: initialReturnDate,
+      extended: false,
+      actual_return_date: null,
       status: 'active',
-      notes: notes?.trim() || undefined,
-      createdAt: loanDate,
-      updatedAt: loanDate
+      notes,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
-    
+
     // Insert loan
-    const loanResult = await loansCollection.insertOne(loanDoc);
-    const loanId = loanResult.insertedId.toString();
-    
-    // Update book status
-    await booksCollection.updateOne(
-      { codigo: book_codigo },
+    const result = await loansCollection.insertOne(newLoan);
+
+    // Update books to mark as borrowed
+    await booksCollection.updateMany(
+      { codigo: { $in: book_codes } },
       {
         $set: {
           emprestado: true,
-          data_retorno: returnDate.toISOString().split('T')[0],
-          current_loan_id: loanId,
-          updatedAt: loanDate
-        },
-        $inc: { total_loans: 1 }
+          data_retorno: initialReturnDate.toISOString(),
+          updatedAt: new Date()
+        }
       }
     );
-    
+
+    // Update user statistics if user_id exists
+    if (user_id) {
+      try {
+        await usersCollection.updateOne(
+          { _id: new ObjectId(user_id) },
+          {
+            $inc: { active_loans: 1, total_loans: 1 },
+            $set: { updatedAt: new Date() }
+          }
+        );
+      } catch (error) {
+        console.error('Error updating user stats:', error);
+        // Don't fail the loan creation if user update fails
+      }
+    }
+
     return NextResponse.json({
       message: 'Loan created successfully',
-      loanId,
-      loan: {
-        ...loanDoc,
-        _id: loanId,
-        loan_date: loanDoc.loan_date.toISOString(),
-        original_return_date: loanDoc.original_return_date.toISOString(),
-        current_return_date: loanDoc.current_return_date.toISOString(),
-        createdAt: loanDoc.createdAt.toISOString(),
-        updatedAt: loanDoc.updatedAt.toISOString()
-      }
+      loanId: result.insertedId.toString()
     });
   } catch (error) {
     console.error('Error creating loan:', error);
     return NextResponse.json(
-      { message: 'Error creating loan' },
+      { message: 'Error creating loan', error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

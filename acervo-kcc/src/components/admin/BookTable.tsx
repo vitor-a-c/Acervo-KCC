@@ -7,12 +7,9 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import BulkActionsBar from './BulkActionsBar';
 import BulkEditModal from './BulkEditModal';
 import PasteCodesModal from './PasteCodesModal';
-import BorrowBookModal from './BorrowBookModal';
-import LoanManagementModal from './LoanManagementModal';
-import { formatBookCode } from '@/utils/bookUtils';
+import { formatBookCodeShort } from '@/utils/bookCodeUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getTranslation } from '@/lib/translations';
-import { isOverdue, daysUntilReturn } from '@/utils/dateUtils';
 
 interface BookTableProps {
   token: string | null;
@@ -25,8 +22,6 @@ interface PaginationInfo {
   totalPages: number;
 }
 
-type LoanFilter = 'all' | 'available' | 'borrowed' | 'overdue';
-
 export default function BookTable({ token }: BookTableProps) {
   const { language } = useLanguage();
   const t = getTranslation(language);
@@ -34,7 +29,6 @@ export default function BookTable({ token }: BookTableProps) {
   const [books, setBooks] = useState<BookDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loanFilter, setLoanFilter] = useState<LoanFilter>('all');
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 50,
@@ -47,10 +41,6 @@ export default function BookTable({ token }: BookTableProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [deletingBook, setDeletingBook] = useState<BookDocument | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
-  // Loan modals
-  const [borrowingBook, setBorrowingBook] = useState<BookDocument | null>(null);
-  const [managingLoan, setManagingLoan] = useState<{ loanId: string; book: BookDocument } | null>(null);
   
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
@@ -103,7 +93,21 @@ export default function BookTable({ token }: BookTableProps) {
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchBooks(1, searchTerm);
+    let term = searchTerm.trim();
+    // Handle short code format
+    const codeMatch = term.match(/^([A-Z]{2})(\d{1,})$/i);
+    if (codeMatch) {
+      const prefix = codeMatch[1].toUpperCase();
+      const num = codeMatch[2].padStart(10, '0');
+      term = `${prefix}${num}`;
+    } else {
+      const singleCodeMatch = term.match(/^A(\d{1,11})$/i);
+      if (singleCodeMatch) {
+        const num = singleCodeMatch[1].padStart(11, '0');
+        term = `A${num}`;
+      }
+    }
+    fetchBooks(1, term);
   };
 
   // Handle selection
@@ -241,61 +245,6 @@ export default function BookTable({ token }: BookTableProps) {
     setSuccessMessage(t.admin.bookManagement.messages.bookSaved);
   };
 
-  // Handle loan actions
-  const handleBorrowSuccess = () => {
-    fetchBooks(pagination.page, searchTerm);
-    setBorrowingBook(null);
-    setSuccessMessage(t.loans.bookBorrowed);
-  };
-
-  const handleLoanUpdate = () => {
-    fetchBooks(pagination.page, searchTerm);
-    setSuccessMessage(t.loans.loanUpdated);
-  };
-
-  // Filter books by loan status
-  const filteredBooksByLoan = books.filter(book => {
-    if (loanFilter === 'available') {
-      return !book.emprestado;
-    } else if (loanFilter === 'borrowed') {
-      return book.emprestado;
-    } else if (loanFilter === 'overdue') {
-      return book.emprestado && book.data_retorno && isOverdue(book.data_retorno);
-    }
-    return true; // 'all'
-  });
-
-  // Get loan status info
-  const getLoanStatusInfo = (book: BookDocument) => {
-    if (!book.emprestado) {
-      return {
-        text: t.admin.bookManagement.status.available,
-        className: 'bg-green-100 text-green-700 border-green-200'
-      };
-    }
-    
-    if (book.data_retorno && isOverdue(book.data_retorno)) {
-      const days = Math.abs(daysUntilReturn(book.data_retorno));
-      return {
-        text: `${t.loans.overdue} (${days}d)`,
-        className: 'bg-red-100 text-red-700 border-red-200'
-      };
-    }
-    
-    if (book.data_retorno) {
-      const days = daysUntilReturn(book.data_retorno);
-      return {
-        text: `${t.admin.bookManagement.status.borrowed} (${days}d)`,
-        className: 'bg-yellow-100 text-yellow-700 border-yellow-200'
-      };
-    }
-    
-    return {
-      text: t.admin.bookManagement.status.borrowed,
-      className: 'bg-yellow-100 text-yellow-700 border-yellow-200'
-    };
-  };
-
   if (loading && books.length === 0) {
     return (
       <div className="text-center py-8">
@@ -332,97 +281,32 @@ export default function BookTable({ token }: BookTableProps) {
           </button>
         </div>
 
-        {/* Search and Filters */}
-        <div className="space-y-3">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              let term = searchTerm.trim();
-              const codeMatch = term.match(/^([A-Z]{2})(\d{1,})$/i);
-              if (codeMatch) {
-                const prefix = codeMatch[1].toUpperCase();
-                const num = codeMatch[2].padStart(10, '0');
-                term = `${prefix}${num}`;
-              } else {
-                const singleCodeMatch = term.match(/^A(\d{1,11})$/i);
-                if (singleCodeMatch) {
-                  const num = singleCodeMatch[1].padStart(11, '0');
-                  term = `A${num}`;
-                }
-              }
-              fetchBooks(1, term);
-            }}
-            className="flex gap-2"
+        {/* Search */}
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder={t.admin.bookManagement.searchPlaceholder}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={t.admin.bookManagement.searchPlaceholder}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              {t.admin.bookManagement.searchButton}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchTerm('');
-                fetchBooks(1, '');
-              }}
-              className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50"
-            >
-              {t.admin.bookManagement.clearButton}
-            </button>
-          </form>
-
-          {/* Loan Status Filter */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setLoanFilter('all')}
-              className={`px-4 py-2 text-sm rounded ${
-                loanFilter === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {t.loans.showAll}
-            </button>
-            <button
-              onClick={() => setLoanFilter('available')}
-              className={`px-4 py-2 text-sm rounded ${
-                loanFilter === 'available'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {t.admin.bookManagement.status.available}
-            </button>
-            <button
-              onClick={() => setLoanFilter('borrowed')}
-              className={`px-4 py-2 text-sm rounded ${
-                loanFilter === 'borrowed'
-                  ? 'bg-yellow-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {t.admin.bookManagement.status.borrowed}
-            </button>
-            <button
-              onClick={() => setLoanFilter('overdue')}
-              className={`px-4 py-2 text-sm rounded ${
-                loanFilter === 'overdue'
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {t.loans.overdue}
-            </button>
-          </div>
-        </div>
+            {t.admin.bookManagement.searchButton}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchTerm('');
+              fetchBooks(1, '');
+            }}
+            className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50"
+          >
+            {t.admin.bookManagement.clearButton}
+          </button>
+        </form>
       </div>
 
       {/* Bulk Actions Bar */}
@@ -442,7 +326,7 @@ export default function BookTable({ token }: BookTableProps) {
               <th className="px-4 py-3 text-left">
                 <input
                   type="checkbox"
-                  checked={filteredBooksByLoan.length > 0 && selectedBooks.size === filteredBooksByLoan.length}
+                  checked={books.length > 0 && selectedBooks.size === books.length}
                   onChange={toggleSelectAll}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
@@ -468,73 +352,47 @@ export default function BookTable({ token }: BookTableProps) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredBooksByLoan.map((book) => {
-              const loanStatus = getLoanStatusInfo(book);
-              
-              return (
-                <tr key={book.codigo} className={`hover:bg-gray-50 ${selectedBooks.has(book.codigo) ? 'bg-blue-50' : ''}`}>
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedBooks.has(book.codigo)}
-                      onChange={() => toggleSelection(book.codigo)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                  </td>
-                  <td className="px-4 py-3 text-sm font-mono" title={book.codigo}>
-                    {formatBookCode(book.codigo)}
-                  </td>
-                  <td className="px-4 py-3 text-sm max-w-xs truncate" title={book.titulo}>
-                    {book.titulo}
-                  </td>
-                  <td className="px-4 py-3 text-sm">{book.autor}</td>
-                  <td className="px-4 py-3 text-sm">{book.posicao}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-xs rounded-full border ${loanStatus.className}`}>
-                      {loanStatus.text}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      {/* Loan Actions */}
-                      {!book.emprestado ? (
-                        <button
-                          onClick={() => setBorrowingBook(book)}
-                          className="text-blue-600 hover:text-blue-800 font-medium"
-                          title={t.loans.borrow}
-                        >
-                          {t.loans.borrow}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setManagingLoan({ loanId: book.current_loan_id!, book })}
-                          className="text-purple-600 hover:text-purple-800 font-medium"
-                          title={t.loans.manageLoan}
-                        >
-                          {t.loans.manageLoan}
-                        </button>
-                      )}
-                      
-                      <span className="text-gray-300">|</span>
-                      
-                      {/* Edit/Delete Actions */}
-                      <button
-                        onClick={() => setEditingBook(book)}
-                        className="text-gray-600 hover:text-gray-800"
-                      >
-                        {t.admin.bookManagement.actions.edit}
-                      </button>
-                      <button
-                        onClick={() => setDeletingBook(book)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        {t.admin.bookManagement.actions.delete}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+            {books.map((book) => (
+              <tr key={book.codigo} className={`hover:bg-gray-50 ${selectedBooks.has(book.codigo) ? 'bg-blue-50' : ''}`}>
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedBooks.has(book.codigo)}
+                    onChange={() => toggleSelection(book.codigo)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                </td>
+                <td className="px-4 py-3 text-sm font-mono" title={book.codigo}>
+                  {formatBookCodeShort(book.codigo)}
+                </td>
+                <td className="px-4 py-3 text-sm">{book.titulo}</td>
+                <td className="px-4 py-3 text-sm">{book.autor}</td>
+                <td className="px-4 py-3 text-sm">{book.posicao}</td>
+                <td className="px-4 py-3">
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    book.emprestado 
+                      ? 'bg-red-100 text-red-700' 
+                      : 'bg-green-100 text-green-700'
+                  }`}>
+                    {book.emprestado ? t.admin.bookManagement.status.borrowed : t.admin.bookManagement.status.available}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-sm">
+                  <button
+                    onClick={() => setEditingBook(book)}
+                    className="text-blue-600 hover:text-blue-800 mr-3"
+                  >
+                    {t.admin.bookManagement.actions.edit}
+                  </button>
+                  <button
+                    onClick={() => setDeletingBook(book)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    {t.admin.bookManagement.actions.delete}
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -591,7 +449,7 @@ export default function BookTable({ token }: BookTableProps) {
 
       {deletingBook && (
         <DeleteConfirmModal
-          bookCode={formatBookCode(deletingBook.codigo)}
+          bookCode={formatBookCodeShort(deletingBook.codigo)}
           bookTitle={deletingBook.titulo}
           onConfirm={handleDeleteConfirm}
           onCancel={() => setDeletingBook(null)}
@@ -643,26 +501,6 @@ export default function BookTable({ token }: BookTableProps) {
         <PasteCodesModal
           onConfirm={handlePasteCodes}
           onCancel={() => setShowPasteCodes(false)}
-        />
-      )}
-
-      {/* Loan Modals */}
-      {borrowingBook && (
-        <BorrowBookModal
-          bookCode={borrowingBook.codigo}
-          bookTitle={borrowingBook.titulo}
-          token={token}
-          onClose={() => setBorrowingBook(null)}
-          onSuccess={handleBorrowSuccess}
-        />
-      )}
-
-      {managingLoan && (
-        <LoanManagementModal
-          loanId={managingLoan.loanId}
-          token={token}
-          onClose={() => setManagingLoan(null)}
-          onUpdate={handleLoanUpdate}
         />
       )}
     </div>
