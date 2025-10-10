@@ -23,6 +23,7 @@ export default function LoanManagementTable({ token, onUpdate }: LoanManagementT
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const [editingLoanId, setEditingLoanId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<LoanWithDetails>>({});
+  const [editingBookCodes, setEditingBookCodes] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const fetchLoans = async () => {
@@ -118,6 +119,7 @@ export default function LoanManagementTable({ token, onUpdate }: LoanManagementT
 
   const handleStartEdit = (loan: LoanWithDetails) => {
     setEditingLoanId(loan._id);
+    setEditingBookCodes(loan.book_codes.map(code => formatBookCodeShort(code)).join(', '));
     setEditForm({
       borrower_name: loan.borrower_name,
       borrower_email: loan.borrower_email,
@@ -134,23 +136,44 @@ export default function LoanManagementTable({ token, onUpdate }: LoanManagementT
   const handleCancelEdit = () => {
     setEditingLoanId(null);
     setEditForm({});
+    setEditingBookCodes('');
   };
 
   const handleSaveEdit = async (loanId: string) => {
     try {
+      // Parse book codes from the input
+      const updatedBookCodes = editingBookCodes
+        .split(',')
+        .map(code => code.trim())
+        .filter(code => code.length > 0)
+        .map(code => {
+          // Expand short codes to full format
+          const match = code.match(/^([A-Z]{1,2})(\d+)$/i);
+          if (match) {
+            const [, prefix, number] = match;
+            const paddingNeeded = 13 - prefix.length - number.length;
+            return `${prefix.toUpperCase()}${'0'.repeat(paddingNeeded)}${number}`;
+          }
+          return code.toUpperCase();
+        });
+
       const response = await fetch(`/api/admin/loans/${loanId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify({
+          ...editForm,
+          book_codes: updatedBookCodes
+        })
       });
 
       if (response.ok) {
         setSuccessMessage(t.admin.loanManagement.messages.updateSuccess);
         setEditingLoanId(null);
         setEditForm({});
+        setEditingBookCodes('');
         fetchLoans();
         onUpdate();
       }
@@ -345,23 +368,41 @@ export default function LoanManagementTable({ token, onUpdate }: LoanManagementT
 
                   {/* Books */}
                   <td className="px-4 py-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">
-                        {t.admin.loanManagement.details.bookCount.replace('{count}', loan.book_count.toString())}
-                      </span>
-                      <details className="inline">
-                        <summary className="text-blue-600 cursor-pointer text-xs">
-                          {t.admin.loanManagement.details.view}
-                        </summary>
-                        <div className="mt-2 p-2 bg-gray-50 rounded text-xs space-y-1">
-                          {loan.book_details?.map((book, idx) => (
-                            <div key={idx} className={book.found ? 'text-gray-700' : 'text-yellow-700'}>
-                              {formatBookCodeShort(book.code)} - {book.title || t.admin.loanManagement.details.notFound}
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    </div>
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <label className="block text-xs font-medium text-gray-700">
+                          Códigos dos Livros
+                        </label>
+                        <textarea
+                          value={editingBookCodes}
+                          onChange={(e) => setEditingBookCodes(e.target.value)}
+                          placeholder="EM2112, A0001, ..."
+                          rows={2}
+                          className="w-full px-2 py-1 border rounded text-xs font-mono"
+                        />
+                        <p className="text-xs text-gray-500">
+                          {editingBookCodes.split(',').filter(c => c.trim()).length} livro(s)
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {t.admin.loanManagement.details.bookCount.replace('{count}', loan.book_count.toString())}
+                        </span>
+                        <details className="inline">
+                          <summary className="text-blue-600 cursor-pointer text-xs">
+                            {t.admin.loanManagement.details.view}
+                          </summary>
+                          <div className="mt-2 p-2 bg-gray-50 rounded text-xs space-y-1">
+                            {loan.book_details?.map((book, idx) => (
+                              <div key={idx} className={book.found ? 'text-gray-700' : 'text-yellow-700'}>
+                                {formatBookCodeShort(book.code)} - {book.title || t.admin.loanManagement.details.notFound}
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      </div>
+                    )}
                   </td>
 
                   {/* Loan Date */}
@@ -376,7 +417,7 @@ export default function LoanManagementTable({ token, onUpdate }: LoanManagementT
                         {t.admin.loanManagement.details.returnedOn.replace('{date}', formatDate(loan.actual_return_date!))}
                       </span>
                     ) : isEditing ? (
-                      <div className="space-y-1">
+                      <div className="space-y-2">
                         <label className="flex items-center gap-2 text-xs">
                           <input
                             type="checkbox"
@@ -403,6 +444,18 @@ export default function LoanManagementTable({ token, onUpdate }: LoanManagementT
                             className="w-full px-2 py-1 border rounded text-xs"
                           />
                         )}
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Observações
+                          </label>
+                          <textarea
+                            value={editForm.notes || ''}
+                            onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                            placeholder="Adicionar comentários..."
+                            rows={2}
+                            className="w-full px-2 py-1 border rounded text-xs"
+                          />
+                        </div>
                       </div>
                     ) : (
                       <div>
@@ -417,6 +470,9 @@ export default function LoanManagementTable({ token, onUpdate }: LoanManagementT
                         )}
                         {loan.extended && (
                           <span className="text-xs text-blue-600">{t.admin.loanManagement.status.extended}</span>
+                        )}
+                        {loan.notes && (
+                          <p className="text-xs text-gray-600 mt-1 italic">💬 {loan.notes}</p>
                         )}
                       </div>
                     )}

@@ -56,6 +56,7 @@ export async function PUT(
     if (updates.extended !== undefined) {
       updateData.extended = updates.extended;
       if (updates.extended && !currentLoan.extended) {
+        // First time extending - add 21 days to initial return date
         const extendedDate = new Date(currentLoan.initial_return_date);
         extendedDate.setDate(extendedDate.getDate() + 21);
         updateData.extended_return_date = extendedDate;
@@ -106,6 +107,45 @@ export async function PUT(
     if (updates.borrower_id !== undefined) updateData.borrower_id = updates.borrower_id;
     if (updates.borrower_address !== undefined) updateData.borrower_address = updates.borrower_address;
     if (updates.notes !== undefined) updateData.notes = updates.notes;
+    
+    // Handle book codes update
+    if (updates.book_codes && Array.isArray(updates.book_codes)) {
+      const oldCodes = Array.isArray(currentLoan.book_codes) ? currentLoan.book_codes : [];
+      const newCodes = updates.book_codes;
+      
+      // Find codes that were removed
+      const removedCodes = oldCodes.filter(code => !newCodes.includes(code));
+      // Find codes that were added
+      const addedCodes: string[] = newCodes.filter((code: string) => !oldCodes.includes(code));
+      
+      // Update book availability
+      if (removedCodes.length > 0) {
+        await booksCollection.updateMany(
+          { codigo: { $in: removedCodes } },
+          { $set: { emprestado: false, data_retorno: '', updatedAt: new Date() } }
+        );
+      }
+      
+      if (addedCodes.length > 0 && !currentLoan.actual_return_date) {
+        const returnDate = currentLoan.extended && currentLoan.extended_return_date
+          ? currentLoan.extended_return_date
+          : currentLoan.initial_return_date;
+        
+        await booksCollection.updateMany(
+          { codigo: { $in: addedCodes } },
+          { 
+            $set: { 
+              emprestado: true, 
+              data_retorno: returnDate.toISOString(),
+              updatedAt: new Date() 
+            } 
+          }
+        );
+      }
+      
+      updateData.book_codes = newCodes;
+      updateData.book_count = newCodes.length;
+    }
 
     // Update loan
     const result = await loansCollection.updateOne(

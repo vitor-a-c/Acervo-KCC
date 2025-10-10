@@ -33,7 +33,7 @@ export interface LoanDocument {
   borrower_address?: string;
   
   // Books in this loan
-  book_codes: string[];              // Full 13-character codes
+  book_codes: string[];              // Full 12-character codes
   book_count: number;                // Auto-calculated from array length
   
   // Dates

@@ -355,12 +355,9 @@ export interface Translations {
       searchPlaceholder: string;
       searchButton: string;
       clearButton: string;
-      activeLoans: string;
       showingUsers: string;
       columns: {
         name: string;
-        contact: string;
-        id: string;
         loans: string;
         actions: string;
       };
@@ -370,15 +367,39 @@ export interface Translations {
         save: string;
         cancel: string;
       };
+      fields: {
+        name: string;
+        email: string;
+        phone: string;
+        governmentId: string;
+        governmentIdSecondary: string;
+        address: string;
+      };
+      loanStats: {
+        active: string;
+        total: string;
+        loans: string;
+        overdue: string;
+      };
+      bulkActions: {
+        selected: string;
+        deleteSelected: string;
+        clearSelection: string;
+      };
       messages: {
         userUpdated: string;
         userDeleted: string;
+        usersDeleted: string;
         cannotDeleteWithLoans: string;
       };
       deleteConfirm: {
         title: string;
         message: string;
         deleteButton: string;
+        bulkTitle: string;
+        bulkMessage: string;
+        bulkNote: string;
+        bulkDeleteButton: string;
       };
     };
     loanManagement: {
@@ -810,12 +831,9 @@ export const translations: Record<Language, Translations> = {
         searchPlaceholder: "Buscar por nome, email, telefone ou CPF...",
         searchButton: "Buscar",
         clearButton: "Limpar",
-        activeLoans: "ativos",
         showingUsers: "Mostrando {start} até {end} de {total} usuários",
         columns: {
           name: "Nome",
-          contact: "Contato",
-          id: "CPF/RG",
           loans: "Empréstimos",
           actions: "Ações"
         },
@@ -825,15 +843,39 @@ export const translations: Record<Language, Translations> = {
           save: "Salvar",
           cancel: "Cancelar"
         },
+        fields: {
+          name: "Nome",
+          email: "E-mail",
+          phone: "Telefone",
+          governmentId: "CPF/RG",
+          governmentIdSecondary: "RG/Outro",
+          address: "Endereço"
+        },
+        loanStats: {
+          active: "ativo(s)",
+          total: "Total:",
+          loans: "empréstimos",
+          overdue: "atrasado(s)"
+        },
+        bulkActions: {
+          selected: "{count} usuário(s) selecionado(s)",
+          deleteSelected: "Excluir Selecionados",
+          clearSelection: "Limpar Seleção"
+        },
         messages: {
           userUpdated: "Usuário atualizado com sucesso",
           userDeleted: "Usuário excluído com sucesso",
-          cannotDeleteWithLoans: "Não é possível excluir usuário com empréstimos ativos"
+          usersDeleted: "{count} usuários excluídos com sucesso",
+          cannotDeleteWithLoans: "Não é possível excluir usuário(s) com empréstimos ativos"
         },
         deleteConfirm: {
           title: "Confirmar Exclusão",
           message: "Tem certeza que deseja excluir o usuário '{name}'?",
-          deleteButton: "Excluir"
+          deleteButton: "Excluir",
+          bulkTitle: "Confirmar Exclusão em Lote",
+          bulkMessage: "Tem certeza que deseja excluir {count} usuário(s) selecionado(s)?",
+          bulkNote: "Nota: Apenas usuários sem empréstimos ativos serão excluídos.",
+          bulkDeleteButton: "Excluir {count} Usuário(s)"
         }
       },
       loanManagement: {
@@ -1255,6 +1297,60 @@ export const translations: Record<Language, Translations> = {
           errors: "오류"
         }
       },
+      userManagement: {
+        title: "사용자 관리",
+        loading: "사용자 로딩 중...",
+        noUsers: "사용자를 찾을 수 없습니다",
+        searchPlaceholder: "이름, 이메일, 전화번호 또는 신분증 번호로 검색...",
+        searchButton: "검색",
+        clearButton: "초기화",
+        showingUsers: "{start}~{end} / 총 {total}명",
+        columns: {
+          name: "이름",
+          loans: "대출",
+          actions: "작업"
+        },
+        actions: {
+          edit: "수정",
+          delete: "삭제",
+          save: "저장",
+          cancel: "취소"
+        },
+        fields: {
+          name: "이름",
+          email: "이메일",
+          phone: "전화번호",
+          governmentId: "신분증 번호",
+          governmentIdSecondary: "추가 신분증",
+          address: "주소"
+        },
+        loanStats: {
+          active: "활성",
+          total: "총:",
+          loans: "대출",
+          overdue: "연체"
+        },
+        bulkActions: {
+          selected: "{count}명 선택됨",
+          deleteSelected: "선택 항목 삭제",
+          clearSelection: "선택 해제"
+        },
+        messages: {
+          userUpdated: "사용자가 성공적으로 업데이트되었습니다",
+          userDeleted: "사용자가 성공적으로 삭제되었습니다",
+          usersDeleted: "{count}명의 사용자가 성공적으로 삭제되었습니다",
+          cannotDeleteWithLoans: "활성 대출이 있는 사용자는 삭제할 수 없습니다"
+        },
+        deleteConfirm: {
+          title: "삭제 확인",
+          message: "'{name}' 사용자를 삭제하시겠습니까?",
+          deleteButton: "삭제",
+          bulkTitle: "일괄 삭제 확인",
+          bulkMessage: "{count}명의 선택된 사용자를 삭제하시겠습니까?",
+          bulkNote: "참고: 활성 대출이 없는 사용자만 삭제됩니다.",
+          bulkDeleteButton: "{count}명 삭제"
+        }
+      },
       loanManagement: {
         title: "대출 관리",
         loading: "대출 정보 로딩 중...",
@@ -1362,39 +1458,6 @@ export const translations: Record<Language, Translations> = {
           success: "대출이 성공적으로 생성되었습니다! {count}권의 도서가 대출되었습니다.",
           error: "대출 생성 중 오류가 발생했습니다.",
           failedToCreate: "대출 생성에 실패했습니다."
-        }
-      },
-      userManagement: {
-        title: "",
-        loading: "",
-        noUsers: "",
-        searchPlaceholder: "",
-        searchButton: "",
-        clearButton: "",
-        activeLoans: "",
-        showingUsers: "",
-        columns: {
-          name: "",
-          contact: "",
-          id: "",
-          loans: "",
-          actions: ""
-        },
-        actions: {
-          edit: "",
-          delete: "",
-          save: "",
-          cancel: ""
-        },
-        messages: {
-          userUpdated: "",
-          userDeleted: "",
-          cannotDeleteWithLoans: ""
-        },
-        deleteConfirm: {
-          title: "",
-          message: "",
-          deleteButton: ""
         }
       }
     }
@@ -1708,6 +1771,60 @@ export const translations: Record<Language, Translations> = {
           errors: "Errors"
         }
       },
+      userManagement: {
+        title: "User Management",
+        loading: "Loading users...",
+        noUsers: "No users found",
+        searchPlaceholder: "Search by name, email, phone or ID number...",
+        searchButton: "Search",
+        clearButton: "Clear",
+        showingUsers: "Showing {start} to {end} of {total} users",
+        columns: {
+          name: "Name",
+          loans: "Loans",
+          actions: "Actions"
+        },
+        actions: {
+          edit: "Edit",
+          delete: "Delete",
+          save: "Save",
+          cancel: "Cancel"
+        },
+        fields: {
+          name: "Name",
+          email: "Email",
+          phone: "Phone",
+          governmentId: "ID Number",
+          governmentIdSecondary: "Secondary ID",
+          address: "Address"
+        },
+        loanStats: {
+          active: "active",
+          total: "Total:",
+          loans: "loans",
+          overdue: "overdue"
+        },
+        bulkActions: {
+          selected: "{count} user(s) selected",
+          deleteSelected: "Delete Selected",
+          clearSelection: "Clear Selection"
+        },
+        messages: {
+          userUpdated: "User updated successfully",
+          userDeleted: "User deleted successfully",
+          usersDeleted: "{count} user(s) deleted successfully",
+          cannotDeleteWithLoans: "Cannot delete user(s) with active loans"
+        },
+        deleteConfirm: {
+          title: "Confirm Deletion",
+          message: "Are you sure you want to delete user '{name}'?",
+          deleteButton: "Delete",
+          bulkTitle: "Confirm Bulk Deletion",
+          bulkMessage: "Are you sure you want to delete {count} selected user(s)?",
+          bulkNote: "Note: Only users without active loans will be deleted.",
+          bulkDeleteButton: "Delete {count} User(s)"
+        }
+      },
       loanManagement: {
         title: "Manage Loans",
         loading: "Loading loans...",
@@ -1815,39 +1932,6 @@ export const translations: Record<Language, Translations> = {
           success: "Loan created successfully! {count} book(s) borrowed.",
           error: "Error creating loan",
           failedToCreate: "Failed to create loan"
-        }
-      },
-      userManagement: {
-        title: "",
-        loading: "",
-        noUsers: "",
-        searchPlaceholder: "",
-        searchButton: "",
-        clearButton: "",
-        activeLoans: "",
-        showingUsers: "",
-        columns: {
-          name: "",
-          contact: "",
-          id: "",
-          loans: "",
-          actions: ""
-        },
-        actions: {
-          edit: "",
-          delete: "",
-          save: "",
-          cancel: ""
-        },
-        messages: {
-          userUpdated: "",
-          userDeleted: "",
-          cannotDeleteWithLoans: ""
-        },
-        deleteConfirm: {
-          title: "",
-          message: "",
-          deleteButton: ""
         }
       }
     }

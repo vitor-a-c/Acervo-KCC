@@ -30,9 +30,12 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
   
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<UserDocument>>({});
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<UserDocument | null>(null);
+  
+  // Bulk selection
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const fetchUsers = async (page = 1, search = '') => {
     setLoading(true);
@@ -74,6 +77,24 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchUsers(1, searchTerm);
+  };
+
+  const toggleSelection = (userId: string) => {
+    const newSelection = new Set(selectedUsers);
+    if (newSelection.has(userId)) {
+      newSelection.delete(userId);
+    } else {
+      newSelection.add(userId);
+    }
+    setSelectedUsers(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUsers.size === users.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(users.map(u => u._id!.toString())));
+    }
   };
 
   const handleStartEdit = (user: UserDocument) => {
@@ -139,6 +160,39 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
     }
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      const usersToDelete = users.filter(u => 
+        selectedUsers.has(u._id!.toString()) && u.active_loans === 0
+      );
+
+      if (usersToDelete.length === 0) {
+        alert(t.admin.userManagement.messages.cannotDeleteWithLoans);
+        return;
+      }
+
+      await Promise.all(
+        usersToDelete.map(user =>
+          fetch(`/api/admin/users/${user._id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+        )
+      );
+
+      setSuccessMessage(
+        t.admin.userManagement.messages.usersDeleted.replace('{count}', usersToDelete.length.toString())
+      );
+      setShowBulkDeleteConfirm(false);
+      setSelectedUsers(new Set());
+      fetchUsers(pagination.page, searchTerm);
+    } catch (error) {
+      console.error('Error deleting users:', error);
+    }
+  };
+
   if (loading && users.length === 0) {
     return (
       <div className="text-center py-8">
@@ -194,19 +248,44 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
         </form>
       </div>
 
+      {/* Bulk Actions */}
+      {selectedUsers.size > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded flex items-center justify-between">
+          <span className="text-sm font-medium text-blue-900">
+            {t.admin.userManagement.bulkActions.selected.replace('{count}', selectedUsers.size.toString())}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowBulkDeleteConfirm(true)}
+              className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              {t.admin.userManagement.bulkActions.deleteSelected}
+            </button>
+            <button
+              onClick={() => setSelectedUsers(new Set())}
+              className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+            >
+              {t.admin.userManagement.bulkActions.clearSelection}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-4 py-3 text-left">
+                <input
+                  type="checkbox"
+                  checked={users.length > 0 && selectedUsers.size === users.length}
+                  onChange={toggleSelectAll}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+              </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 {t.admin.userManagement.columns.name}
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                {t.admin.userManagement.columns.contact}
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                {t.admin.userManagement.columns.id}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 {t.admin.userManagement.columns.loans}
@@ -221,66 +300,80 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
               const isEditing = editingUserId === user._id?.toString();
 
               return (
-                <tr key={user._id?.toString()} className="hover:bg-gray-50">
-                  {/* Name */}
-                  <td className="px-4 py-3 text-sm">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.name || ''}
-                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                        className="w-full px-2 py-1 border rounded text-sm"
-                        required
-                      />
-                    ) : (
-                      <div>
-                        <p className="font-medium">{user.name}</p>
-                        {user.address && (
-                          <p className="text-xs text-gray-500">{user.address}</p>
-                        )}
-                      </div>
-                    )}
+                <tr key={user._id?.toString()} className={`hover:bg-gray-50 ${selectedUsers.has(user._id!.toString()) ? 'bg-blue-50' : ''}`}>
+                  {/* Checkbox */}
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.has(user._id!.toString())}
+                      onChange={() => toggleSelection(user._id!.toString())}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
                   </td>
 
-                  {/* Contact */}
+                  {/* Name / Edit Form */}
                   <td className="px-4 py-3 text-sm">
                     {isEditing ? (
-                      <div className="space-y-1">
-                        <input
-                          type="email"
-                          value={editForm.email || ''}
-                          onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                          placeholder="Email"
-                          className="w-full px-2 py-1 border rounded text-xs"
-                        />
-                        <input
-                          type="tel"
-                          value={editForm.phone || ''}
-                          onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                          placeholder="Phone"
-                          className="w-full px-2 py-1 border rounded text-xs"
-                        />
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            {t.admin.userManagement.fields.name} *
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.name || ''}
+                            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                            className="w-full px-2 py-1 border rounded text-sm"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            {t.admin.userManagement.fields.email}
+                          </label>
+                          <input
+                            type="email"
+                            value={editForm.email || ''}
+                            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                            className="w-full px-2 py-1 border rounded text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            {t.admin.userManagement.fields.phone}
+                          </label>
+                          <input
+                            type="tel"
+                            value={editForm.phone || ''}
+                            onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                            className="w-full px-2 py-1 border rounded text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            {t.admin.userManagement.fields.governmentId}
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.government_id || ''}
+                            onChange={(e) => setEditForm({ ...editForm, government_id: e.target.value })}
+                            className="w-full px-2 py-1 border rounded text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            {t.admin.userManagement.fields.address}
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.address || ''}
+                            onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                            className="w-full px-2 py-1 border rounded text-xs"
+                          />
+                        </div>
                       </div>
                     ) : (
-                      <div>
-                        {user.email && <p className="text-xs">{user.email}</p>}
-                        {user.phone && <p className="text-xs text-gray-500">{user.phone}</p>}
-                      </div>
-                    )}
-                  </td>
-
-                  {/* Government ID */}
-                  <td className="px-4 py-3 text-sm">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.government_id || ''}
-                        onChange={(e) => setEditForm({ ...editForm, government_id: e.target.value })}
-                        placeholder="CPF/RG"
-                        className="w-full px-2 py-1 border rounded text-xs"
-                      />
-                    ) : (
-                      <p className="text-xs text-gray-600">{user.government_id || '-'}</p>
+                      <p className="font-medium text-gray-900">{user.name}</p>
                     )}
                   </td>
 
@@ -294,7 +387,7 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
                           ? 'bg-yellow-100 text-yellow-700'
                           : 'bg-green-100 text-green-700'
                       }`}>
-                        {user.active_loans} {t.admin.userManagement.activeLoans}
+                        {user.active_loans} {t.admin.userManagement.loanStats.active}
                       </span>
                       {user.has_overdue && (
                         <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
@@ -302,6 +395,9 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
                         </svg>
                       )}
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {t.admin.userManagement.loanStats.total} {user.total_loans || 0} {t.admin.userManagement.loanStats.loans}
+                    </p>
                   </td>
 
                   {/* Actions */}
@@ -383,7 +479,7 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Single Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
@@ -405,6 +501,37 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
                 {t.admin.userManagement.deleteConfirm.deleteButton}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {t.admin.userManagement.deleteConfirm.bulkTitle}
+            </h3>
+            <p className="text-gray-600 mb-2">
+              {t.admin.userManagement.deleteConfirm.bulkMessage.replace('{count}', selectedUsers.size.toString())}
+            </p>
+            <p className="text-sm text-yellow-700 mb-6">
+              {t.admin.userManagement.deleteConfirm.bulkNote}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+              >
+                {t.admin.userManagement.actions.cancel}
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                {t.admin.userManagement.deleteConfirm.bulkDeleteButton.replace('{count}', selectedUsers.size.toString())}
               </button>
             </div>
           </div>
