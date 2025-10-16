@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import UserSearchInput from './UserSearchInput';
 import BookCodesInput from './BookCodesInput';
@@ -26,6 +26,7 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
     borrower_id: '',
     borrower_address: '',
     loan_date: formatDateForInput(new Date()),
+    return_date: formatDateForInput(addDays(new Date(), 21)),
     notes: ''
   });
   
@@ -33,19 +34,28 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Update return date when loan date changes (default +21 days)
+  useEffect(() => {
+    const loanDate = new Date(formData.loan_date);
+    const newReturnDate = addDays(loanDate, 21);
+    setFormData(prev => ({
+      ...prev,
+      return_date: formatDateForInput(newReturnDate)
+    }));
+  }, [formData.loan_date]);
+
   const handleUserSelect = (user: UserSearchResult | null) => {
     setSelectedUser(user);
     
     if (user) {
       // Auto-fill form with user data if available
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         borrower_email: user.email || '',
         borrower_phone: user.phone || '',
         borrower_id: user.government_id || '',
-        borrower_address: user.address || '',
-        loan_date: formData.loan_date,
-        notes: ''
-      });
+        borrower_address: user.address || ''
+      }));
     }
   };
 
@@ -82,6 +92,7 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
           borrower_address: formData.borrower_address,
           book_codes: bookCodes,
           loan_date: formData.loan_date,
+          return_date: formData.return_date,
           notes: formData.notes
         })
       });
@@ -99,6 +110,7 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
       
       // Reset form
       setTimeout(() => {
+        const today = new Date();
         setSelectedUser(null);
         setBookCodes([]);
         setValidatedBooks([]);
@@ -107,7 +119,8 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
           borrower_phone: '',
           borrower_id: '',
           borrower_address: '',
-          loan_date: formatDateForInput(new Date()),
+          loan_date: formatDateForInput(today),
+          return_date: formatDateForInput(addDays(today, 21)),
           notes: ''
         });
         setSuccessMessage('');
@@ -122,6 +135,7 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
   };
 
   const handleClear = () => {
+    const today = new Date();
     setSelectedUser(null);
     setBookCodes([]);
     setValidatedBooks([]);
@@ -130,15 +144,18 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
       borrower_phone: '',
       borrower_id: '',
       borrower_address: '',
-      loan_date: formatDateForInput(new Date()),
+      loan_date: formatDateForInput(today),
+      return_date: formatDateForInput(addDays(today, 21)),
       notes: ''
     });
     setError('');
     setSuccessMessage('');
   };
 
+  // Calculate days difference for display
   const loanDate = new Date(formData.loan_date);
-  const returnDate = addDays(loanDate, 21);
+  const returnDate = new Date(formData.return_date);
+  const daysDifference = Math.round((returnDate.getTime() - loanDate.getTime()) / (1000 * 60 * 60 * 24));
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -269,9 +286,16 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {t.admin.newLoan.dateSection.returnDate}
             </label>
-            <div className="px-3 py-2 bg-blue-50 border border-blue-200 rounded text-blue-900 font-medium">
-              {formatDate(returnDate)} {t.admin.newLoan.dateSection.returnDays.replace('{days}', '21')}
-            </div>
+            <input
+              type="date"
+              value={formData.return_date}
+              onChange={(e) => setFormData({ ...formData, return_date: e.target.value })}
+              className="w-full px-3 py-2 border bg-blue-50 border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" 
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              {t.admin.newLoan.dateSection.returnDays.replace('{days}', daysDifference.toString())}
+            </p>
           </div>
         </div>
 
