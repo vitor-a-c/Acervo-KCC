@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { LoanDocument, calculateLoanStatus } from '@/types/database';
-import { ObjectId } from 'mongodb';
+import { ObjectId, Filter } from 'mongodb';
 import jwt from 'jsonwebtoken';
 
 if (!process.env.JWT_SECRET) {
@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
     const loansCollection = db.collection<LoanDocument>('loans');
     const booksCollection = db.collection('books');
 
-    // Build query
-    const query: any = {};
+    // Build query with proper typing
+    const query: Filter<LoanDocument> = {};
 
     // Status filter
     if (status !== 'all') {

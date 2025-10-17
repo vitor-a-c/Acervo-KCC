@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LoanWithDetails } from '@/types/loan';
+import { LoanDocument, shouldShowYellowWarning } from '@/types/database';
 import { formatDate, daysUntilReturn, formatDateForInput, addDays } from '@/utils/dateUtils';
 import { formatBookCodeShort } from '@/utils/bookCodeUtils';
-import { shouldShowYellowWarning } from '@/types/database';
 
 interface LoanManagementTableProps {
   token: string | null;
@@ -209,14 +209,22 @@ export default function LoanManagementTable({ token, onUpdate }: LoanManagementT
     if (loan.status === 'returned') return 'bg-white';
     if (loan.status === 'overdue') return 'bg-red-50';
     
-    // Yellow if past initial date and not extended
-    const loanData = {
+    // Construct proper LoanDocument for shouldShowYellowWarning
+    const loanDocument: LoanDocument = {
+      borrower_name: loan.borrower_name,
+      book_codes: loan.book_codes,
+      book_count: loan.book_count,
+      loan_date: new Date(loan.loan_date),
+      initial_return_date: new Date(loan.initial_return_date),
       extended: loan.extended,
+      extended_return_date: loan.extended_return_date ? new Date(loan.extended_return_date) : undefined,
       actual_return_date: loan.actual_return_date ? new Date(loan.actual_return_date) : null,
-      initial_return_date: new Date(loan.initial_return_date)
+      status: loan.status,
+      createdAt: new Date(loan.createdAt),
+      updatedAt: new Date(loan.updatedAt)
     };
     
-    if (shouldShowYellowWarning(loanData as any)) {
+    if (shouldShowYellowWarning(loanDocument)) {
       return 'bg-yellow-50';
     }
     

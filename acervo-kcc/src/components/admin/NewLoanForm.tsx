@@ -5,8 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import UserSearchInput from './UserSearchInput';
 import BookCodesInput from './BookCodesInput';
 import { UserSearchResult } from '@/types/user';
-import { BookValidationResult } from '@/types/loan';
-import { formatDateForInput, addDays, formatDate } from '@/utils/dateUtils';
+import { formatDateForInput, addDays} from '@/utils/dateUtils';
 
 interface NewLoanFormProps {
   token: string | null;
@@ -18,7 +17,6 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
   
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
   const [bookCodes, setBookCodes] = useState<string[]>([]);
-  const [validatedBooks, setValidatedBooks] = useState<BookValidationResult[]>([]);
   
   const [formData, setFormData] = useState({
     borrower_email: '',
@@ -102,7 +100,7 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
         throw new Error(data.message || t.admin.newLoan.messages.error);
       }
 
-      const result = await response.json();
+      await response.json();
       
       setSuccessMessage(
         t.admin.newLoan.messages.success.replace('{count}', bookCodes.length.toString())
@@ -113,7 +111,6 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
         const today = new Date();
         setSelectedUser(null);
         setBookCodes([]);
-        setValidatedBooks([]);
         setFormData({
           borrower_email: '',
           borrower_phone: '',
@@ -138,7 +135,6 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
     const today = new Date();
     setSelectedUser(null);
     setBookCodes([]);
-    setValidatedBooks([]);
     setFormData({
       borrower_email: '',
       borrower_phone: '',
@@ -260,9 +256,8 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
         <div>
           <BookCodesInput
             token={token}
-            onCodesChange={(codes, validated) => {
+            onCodesChange={(codes) => {
               setBookCodes(codes);
-              setValidatedBooks(validated);
             }}
           />
         </div>

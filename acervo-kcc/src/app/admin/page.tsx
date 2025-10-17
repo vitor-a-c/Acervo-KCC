@@ -303,7 +303,140 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'books' && (
-            <BookTable token={localStorage.getItem('adminToken')} />
+            <div className="space-y-6">
+              {/* CSV Upload Section */}
+              <div className="bg-white rounded-lg shadow-lg p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  {t.admin.upload?.title || 'Import Books from CSV'}
+                </h2>
+
+                {/* Dropzone */}
+                <div
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                    isDragActive
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <input {...getInputProps()} />
+                  <div className="space-y-2">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <p className="text-gray-600">
+                      {isDragActive
+                        ? (t.admin.upload?.dropHere || 'Drop the file here')
+                        : (t.admin.upload?.dragDrop || 'Drag and drop a CSV file here, or click to select')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Preview */}
+                {csvPreview.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                      {t.admin.upload?.preview || 'Preview (first 5 rows)'}
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            {Object.keys(csvPreview[0] || {}).slice(0, 5).map((key) => (
+                              <th
+                                key={key}
+                                className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                              >
+                                {key}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {csvPreview.map((row, idx) => (
+                            <tr key={idx}>
+                              {Object.values(row).slice(0, 5).map((value, colIdx) => (
+                                <td key={colIdx} className="px-3 py-2 text-gray-700">
+                                  {String(value || '')}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Upload Button */}
+                <button
+                  onClick={handleBookUpload}
+                  disabled={!selectedFile || isUploading}
+                  className="mt-6 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isUploading 
+                    ? (t.admin.upload?.uploading || 'Uploading...') 
+                    : (t.admin.upload?.uploadButton || 'Upload CSV')}
+                </button>
+
+                {/* Upload Status */}
+                {uploadStatus && (
+                  <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                      {t.admin.upload?.results?.title || 'Upload Results'}
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>{t.admin.upload?.results?.total || 'Total'}</span>
+                        <span className="font-medium">{uploadStatus.total}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>{t.admin.upload?.results?.processed || 'Processed'}</span>
+                        <span className="font-medium">{uploadStatus.processed}</span>
+                      </div>
+                      {uploadStatus.added !== undefined && (
+                        <div className="flex justify-between">
+                          <span>{t.admin.upload?.results?.added || 'Added'}</span>
+                          <span className="font-medium text-green-600">{uploadStatus.added}</span>
+                        </div>
+                      )}
+                      {uploadStatus.updated !== undefined && (
+                        <div className="flex justify-between">
+                          <span>{t.admin.upload?.results?.updated || 'Updated'}</span>
+                          <span className="font-medium text-blue-600">{uploadStatus.updated}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {uploadStatus.errors.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-semibold text-red-600 mb-2">
+                          {t.admin.upload?.results?.errors || 'Errors'} ({uploadStatus.errors.length})
+                        </h4>
+                        <div className="max-h-32 overflow-y-auto bg-red-50 p-2 rounded text-xs text-red-700">
+                          {uploadStatus.errors.map((error, idx) => (
+                            <div key={idx}>{error}</div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Book Table */}
+              <BookTable token={localStorage.getItem('adminToken')} />
+            </div>
           )}
 
           {activeTab === 'users-manage' && (

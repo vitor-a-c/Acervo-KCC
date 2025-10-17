@@ -5,7 +5,7 @@ export interface LoanFormData {
   borrower_phone?: string;
   borrower_id?: string;
   borrower_address?: string;
-  book_codes: string[];  // Full 13-character codes
+  book_codes: string[];  // Full 12-character codes
   loan_date: Date;
   notes?: string;
 }

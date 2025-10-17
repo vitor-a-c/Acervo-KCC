@@ -1,6 +1,3 @@
-import { loadComponents } from "next/dist/server/load-components";
-import { title } from "process";
-
 export type Language = 'pt' | 'ko' | 'en';
 
 export interface Translations {
@@ -198,6 +195,9 @@ export interface Translations {
       processing: string;
       clearButton: string;
       uploadFailed: string;
+      dropHere: string;
+      dragDrop: string;
+      uploading: string;
       results: {
         title: string;
         total: string;
@@ -674,6 +674,9 @@ export const translations: Record<Language, Translations> = {
         processing: "Processando...",
         clearButton: "Limpar",
         uploadFailed: "Falha no upload",
+        dropHere: "Solte o arquivo aqui",
+        dragDrop: "Arraste e solte o arquivo aqui, ou clique para selecionar",
+        uploading: "Enviando...",
         results: {
           title: "Resultados do Upload",
           total: "Total de Registros:",
@@ -1148,6 +1151,9 @@ export const translations: Record<Language, Translations> = {
         processing: "처리 중...",
         clearButton: "초기화",
         uploadFailed: "업로드 실패",
+        dropHere: "여기에 파일을 드롭하세요",
+        dragDrop: "파일을 여기에 드래그 앤 드롭하거나 클릭하여 선택하세요.",
+        uploading: "업로드 중...",
         results: {
           title: "업로드 결과",
           total: "총 {count}개 파일:",
@@ -1621,6 +1627,9 @@ export const translations: Record<Language, Translations> = {
         processing: "Processing...",
         clearButton: "Clear",
         uploadFailed: "Upload failed",
+        dropHere: "Drop files here",
+        dragDrop: "Drag and drop a file here, or click to select",
+        uploading: "Uploading...",
         results: {
           title: "Upload Results",
           total: "Total Records:",
