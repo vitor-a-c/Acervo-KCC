@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserSearchResult } from '@/types/user';
+import { daysRemainingInSuspension } from '@/utils/dateUtils';
 
 interface UserSearchInputProps {
   token: string | null;
@@ -77,7 +78,9 @@ export default function UserSearchInput({ token, onUserSelect, selectedUser }: U
       _id: '',
       name: searchTerm,
       active_loans: 0,
-      has_overdue: false
+      has_overdue: false,
+      banned: false,
+      suspensionEndDate: undefined
     };
     onUserSelect(newUser);
     setShowDropdown(false);
@@ -96,6 +99,12 @@ export default function UserSearchInput({ token, onUserSelect, selectedUser }: U
       setSearchTerm(selectedUser.name);
     }
   }, [selectedUser]);
+
+  // Helper to check if user is currently suspended
+  const isUserSuspended = (user: UserSearchResult): boolean => {
+    if (!user.suspensionEndDate || user.banned) return false;
+    return new Date(user.suspensionEndDate) > new Date();
+  };
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -145,61 +154,89 @@ export default function UserSearchInput({ token, onUserSelect, selectedUser }: U
             </div>
           ) : results.length > 0 ? (
             <>
-              {results.map((user) => (
-                <button
-                  key={user._id}
-                  type="button"
-                  onClick={() => handleSelectUser(user)}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900">{user.name}</p>
-                      {user.email && (
-                        <p className="text-sm text-gray-600">{user.email}</p>
-                      )}
-                      {user.phone && (
-                        <p className="text-sm text-gray-600">{user.phone}</p>
-                      )}
+              {results.map((user) => {
+                const suspended = isUserSuspended(user);
+                
+                return (
+                  <button
+                    key={user._id}
+                    type="button"
+                    onClick={() => handleSelectUser(user)}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-gray-900">{user.name}</p>
+                          
+                          {/* Ban/Suspension badges */}
+                          {user.banned && (
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-black text-white">
+                              {t.admin.newLoan.userSection.statusBanned}
+                            </span>
+                          )}
+                          {suspended && (
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700">
+                              {t.admin.newLoan.userSection.statusSuspended}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {user.email && (
+                          <p className="text-sm text-gray-600">{user.email}</p>
+                        )}
+                        {user.phone && (
+                          <p className="text-sm text-gray-600">{user.phone}</p>
+                        )}
+                        
+                        {/* Show suspension end date if suspended */}
+                        {suspended && user.suspensionEndDate && (
+                          <p className="text-xs text-orange-600 mt-1">
+                            {t.admin.newLoan.userSection.suspendedUntilLabel
+                              .replace('{date}', new Date(user.suspensionEndDate).toLocaleDateString())
+                              .replace('{days}', daysRemainingInSuspension(user.suspensionEndDate).toString())}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="ml-3 flex-shrink-0">
+                        {user.has_overdue ? (
+                          <div className="flex items-center text-red-600">
+                            <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs font-medium">
+                              {user.overdue_details && user.overdue_details.length > 0
+                                ? `${user.overdue_details.length} ${t.admin.newLoan.userSection.loanInfo.hasOverdue}`
+                                : t.admin.newLoan.userSection.loanInfo.hasOverdue}
+                            </span>
+                          </div>
+                        ) : user.active_loans > 0 ? (
+                          <span className="text-xs text-gray-600">
+                            {t.admin.newLoan.userSection.loanInfo.activeLoans.replace('{count}', user.active_loans.toString())}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-green-600">
+                            {t.admin.newLoan.userSection.loanInfo.noLoans}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
-                    <div className="ml-3 flex-shrink-0">
-                      {user.has_overdue ? (
-                        <div className="flex items-center text-red-600">
-                          <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                          <span className="text-xs font-medium">
-                            {user.overdue_details && user.overdue_details.length > 0
-                              ? `${user.overdue_details.length} ${t.admin.newLoan.userSection.loanInfo.hasOverdue}`
-                              : t.admin.newLoan.userSection.loanInfo.hasOverdue}
-                          </span>
-                        </div>
-                      ) : user.active_loans > 0 ? (
-                        <span className="text-xs text-gray-600">
-                          {t.admin.newLoan.userSection.loanInfo.activeLoans.replace('{count}', user.active_loans.toString())}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-green-600">
-                          {t.admin.newLoan.userSection.loanInfo.noLoans}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {user.has_overdue && user.overdue_details && user.overdue_details.length > 0 && (
-                    <div className="mt-2 text-xs text-red-600">
-                      {user.overdue_details.map((detail, idx) => (
-                        <div key={idx}>
-                          {t.admin.newLoan.userSection.loanInfo.overdueDetails
-                            .replace('{date}', detail.return_date)
-                            .replace('{days}', detail.days_overdue.toString())}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </button>
-              ))}
+                    {user.has_overdue && user.overdue_details && user.overdue_details.length > 0 && (
+                      <div className="mt-2 text-xs text-red-600">
+                        {user.overdue_details.map((detail, idx) => (
+                          <div key={idx}>
+                            {t.admin.newLoan.userSection.loanInfo.overdueDetails
+                              .replace('{date}', detail.return_date)
+                              .replace('{days}', detail.days_overdue.toString())}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
               
               {/* Add new user option */}
               <button

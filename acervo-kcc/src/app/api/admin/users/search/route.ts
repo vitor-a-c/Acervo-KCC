@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { UserDocument, LoanDocument, calculateLoanStatus } from '@/types/database';
-import { daysUntilReturn } from '@/utils/dateUtils';
 import jwt from 'jsonwebtoken';
-import { ObjectId } from 'mongodb';
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
@@ -25,7 +23,7 @@ function verifyAuth(request: NextRequest): boolean {
   }
 }
 
-// GET - Autocomplete search for users
+// GET - Search users by name, email, phone, or government_id
 export async function GET(request: NextRequest) {
   if (!verifyAuth(request)) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -34,57 +32,66 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
-    const limit = parseInt(searchParams.get('limit') || '10');
-
-    if (!query || query.length < 2) {
+    
+    if (query.length < 2) {
       return NextResponse.json({ users: [] });
     }
 
     const db = await getDatabase();
     const usersCollection = db.collection<UserDocument>('users');
     const loansCollection = db.collection<LoanDocument>('loans');
-    
-    // Search users by name (case-insensitive, partial match)
+
+    // Search for users matching the query
     const users = await usersCollection
       .find({
-        name: { $regex: query, $options: 'i' }
+        $or: [
+          { name: { $regex: query, $options: 'i' } },
+          { email: { $regex: query, $options: 'i' } },
+          { phone: { $regex: query, $options: 'i' } },
+          { government_id: { $regex: query, $options: 'i' } }
+        ]
       })
-      .limit(limit)
+      .limit(20)
       .sort({ name: 1 })
       .toArray();
-    
-    // Enrich with overdue loan details
+
+    // Enrich users with overdue loan details
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
-        const userIdStr = user._id?.toString();
+        const overdueDetails: { loan_id: string; return_date: string; days_overdue: number }[] = [];
         
-        // Get active loans for this user
-        const activeLoans = await loansCollection.find({
-          user_id: userIdStr ? new ObjectId(userIdStr) : undefined,
-          actual_return_date: null
-        }).toArray();
-        
-        // Check for overdue loans
-        const overdueLoans = activeLoans
-          .map(loan => ({
-            loan,
-            status: calculateLoanStatus(loan)
-          }))
-          .filter(({ status }) => status === 'overdue')
-          .map(({ loan }) => {
-            const returnDate = loan.extended && loan.extended_return_date 
-              ? loan.extended_return_date 
-              : loan.initial_return_date;
-            
-            return {
-              loan_id: loan._id?.toString() || '',
-              return_date: returnDate.toISOString().split('T')[0],
-              days_overdue: Math.abs(daysUntilReturn(returnDate))
-            };
-          });
-        
+        if (user.has_overdue) {
+          // Get active loans for this user
+          const activeLoans = await loansCollection
+            .find({
+              user_id: user._id,
+              actual_return_date: null
+            })
+            .toArray();
+          
+          // Check each loan for overdue status
+          for (const loan of activeLoans) {
+            const status = calculateLoanStatus(loan);
+            if (status === 'overdue') {
+              const returnDate = loan.extended && loan.extended_return_date
+                ? loan.extended_return_date
+                : loan.initial_return_date;
+              
+              const now = new Date();
+              const diffTime = now.getTime() - returnDate.getTime();
+              const daysOverdue = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              
+              overdueDetails.push({
+                loan_id: loan._id?.toString() || '',
+                return_date: returnDate.toISOString(),
+                days_overdue: daysOverdue
+              });
+            }
+          }
+        }
+
         return {
-          _id: userIdStr || '',
+          _id: user._id?.toString() || '',
           name: user.name,
           email: user.email,
           phone: user.phone,
@@ -92,17 +99,19 @@ export async function GET(request: NextRequest) {
           government_id_secondary: user.government_id_secondary,
           address: user.address,
           active_loans: user.active_loans,
-          has_overdue: overdueLoans.length > 0,
-          overdue_details: overdueLoans
+          has_overdue: user.has_overdue,
+          overdue_details: overdueDetails.length > 0 ? overdueDetails : undefined,
+          banned: user.banned || false,
+          suspensionEndDate: user.suspensionEndDate?.toISOString()
         };
       })
     );
-    
+
     return NextResponse.json({ users: enrichedUsers });
   } catch (error) {
     console.error('Error searching users:', error);
     return NextResponse.json(
-      { message: 'Error searching users' },
+      { message: 'Error searching users', error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

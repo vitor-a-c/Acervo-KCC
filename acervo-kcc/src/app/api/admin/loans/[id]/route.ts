@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
-import { LoanDocument } from '@/types/database';
+import { LoanDocument, UserDocument } from '@/types/database';
 import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
+import { calculateDaysOverdue, calculateSuspensionEndDate } from '@/utils/dateUtils';
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
@@ -40,7 +41,7 @@ export async function PUT(
     const db = await getDatabase();
     const loansCollection = db.collection<LoanDocument>('loans');
     const booksCollection = db.collection('books');
-    const usersCollection = db.collection('users');
+    const usersCollection = db.collection<UserDocument>('users');
 
     // Get current loan
     const currentLoan = await loansCollection.findOne({ _id: new ObjectId(id) });
@@ -71,7 +72,45 @@ export async function PUT(
 
     // Handle return
     if (updates.actual_return_date) {
-      updateData.actual_return_date = new Date(updates.actual_return_date);
+      const actualReturnDate = new Date(updates.actual_return_date);
+      updateData.actual_return_date = actualReturnDate;
+      
+      // Determine effective return date (extended date if extended, otherwise initial)
+      const effectiveReturnDate = currentLoan.extended && currentLoan.extended_return_date
+        ? currentLoan.extended_return_date
+        : currentLoan.initial_return_date;
+      
+      // Calculate days overdue
+      const daysOverdue = calculateDaysOverdue(effectiveReturnDate, actualReturnDate);
+      
+      // If loan was returned late and user exists, apply suspension
+      if (daysOverdue > 0 && currentLoan.user_id) {
+        try {
+          const user = await usersCollection.findOne({ _id: currentLoan.user_id });
+          
+          if (user && !user.banned) {
+            // Calculate new suspension end date (stacks on existing suspension)
+            const newSuspensionEndDate = calculateSuspensionEndDate(
+              daysOverdue,
+              user.suspensionEndDate
+            );
+            
+            // Update user with new suspension
+            await usersCollection.updateOne(
+              { _id: currentLoan.user_id },
+              {
+                $set: {
+                  suspensionEndDate: newSuspensionEndDate,
+                  updatedAt: new Date()
+                }
+              }
+            );
+          }
+        } catch (error) {
+          console.error('Error applying suspension:', error);
+          // Don't fail loan return if suspension update fails
+        }
+      }
       
       // Mark books as available
       const bookCodes = Array.isArray(currentLoan.book_codes) ? currentLoan.book_codes : [];

@@ -104,10 +104,6 @@ export default function BookCodesInput({ token, onCodesChange, initialValue = ''
         className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
         required
       />
-      
-      <p className="text-xs text-gray-500 mt-1">
-        {t.admin.newLoan.booksSection.tip}
-      </p>
 
       {/* Validation Results */}
       {validatedBooks.length > 0 && (

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { UserDocument } from '@/types/database';
+import { UserDocument, isUserSuspended, getUserStatus } from '@/types/database';
+import { formatDateForInput, daysRemainingInSuspension } from '@/utils/dateUtils';
 
 interface UserManagementTableProps {
   token: string | null;
@@ -105,7 +106,9 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
       phone: user.phone,
       government_id: user.government_id,
       government_id_secondary: user.government_id_secondary,
-      address: user.address
+      address: user.address,
+      banned: user.banned || false,
+      suspensionEndDate: user.suspensionEndDate
     });
   };
 
@@ -122,7 +125,14 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify({
+          ...editForm,
+          suspensionEndDate: editForm.suspensionEndDate 
+            ? (editForm.suspensionEndDate instanceof Date 
+              ? editForm.suspensionEndDate.toISOString() 
+              : editForm.suspensionEndDate)
+            : null
+        })
       });
 
       if (response.ok) {
@@ -291,6 +301,9 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
                 {t.admin.userManagement.columns.loans}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Status
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 {t.admin.userManagement.columns.actions}
               </th>
             </tr>
@@ -298,6 +311,8 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => {
               const isEditing = editingUserId === user._id?.toString();
+              const userStatus = getUserStatus(user);
+              const isSuspended = isUserSuspended(user);
 
               return (
                 <tr key={user._id?.toString()} className={`hover:bg-gray-50 ${selectedUsers.has(user._id!.toString()) ? 'bg-blue-50' : ''}`}>
@@ -398,6 +413,80 @@ export default function UserManagementTable({ token }: UserManagementTableProps)
                     <p className="text-xs text-gray-500 mt-1">
                       {t.admin.userManagement.loanStats.total} {user.total_loans || 0} {t.admin.userManagement.loanStats.loans}
                     </p>
+                  </td>
+
+                  {/* Status Column */}
+                  <td className="px-4 py-3 text-sm">
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-xs">
+                          <input
+                            type="checkbox"
+                            checked={editForm.banned || false}
+                            onChange={(e) => setEditForm({ ...editForm, banned: e.target.checked })}
+                            className="h-4 w-4"
+                          />
+                          {t.admin.userManagement.edit.bannedLabel}
+                        </label>
+                        
+                        {!editForm.banned && (
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              {t.admin.userManagement.edit.suspendedLabel}
+                            </label>
+                            <input
+                              type="date"
+                              value={editForm.suspensionEndDate 
+                                ? formatDateForInput(editForm.suspensionEndDate) 
+                                : ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setEditForm({ 
+                                  ...editForm, 
+                                  suspensionEndDate: value ? new Date(value) : undefined 
+                                });
+                              }}
+                              className="w-full px-2 py-1 border rounded text-xs"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              {t.admin.userManagement.edit.suspensionPlaceholder}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div>
+                        {userStatus === 'banned' && (
+                          <span className="px-2 py-1 text-xs rounded-full bg-black text-white">
+                            {t.admin.userManagement.status.banned}
+                          </span>
+                        )}
+                        {userStatus === 'suspended' && user.suspensionEndDate && (
+                          <div className="text-xs">
+                            <span className="px-2 py-1 rounded-full bg-orange-100 text-orange-700">
+                              {t.admin.userManagement.status.suspended}
+                            </span>
+                            <p className="text-gray-600 mt-1">
+                              {t.admin.userManagement.status.suspendedUntil.replace(
+                                '{date}', 
+                                new Date(user.suspensionEndDate).toLocaleDateString()
+                              )}
+                            </p>
+                            <p className="text-gray-500">
+                              ({t.admin.userManagement.status.daysRemaining.replace(
+                                '{days}',
+                                daysRemainingInSuspension(user.suspensionEndDate).toString()
+                              )})
+                            </p>
+                          </div>
+                        )}
+                        {userStatus === 'active' && (
+                          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">
+                            {t.admin.userManagement.status.active}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </td>
 
                   {/* Actions */}

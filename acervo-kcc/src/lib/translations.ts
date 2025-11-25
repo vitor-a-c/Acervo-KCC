@@ -374,6 +374,20 @@ export interface Translations {
         governmentId: string;
         governmentIdSecondary: string;
         address: string;
+        banned: string;
+        suspensionEndDate: string;
+      };
+      status: {
+        active: string;
+        banned: string;
+        suspended: string;
+        suspendedUntil: string;
+        daysRemaining: string;
+      };
+      edit: {
+        bannedLabel: string;
+        suspendedLabel: string;
+        suspensionPlaceholder: string;
       };
       loanStats: {
         active: string;
@@ -465,6 +479,9 @@ export interface Translations {
         addNew: string;
         noUserFound: string;
         noInfo: string;
+        statusBanned: string;
+        statusSuspended: string;
+        suspendedUntilLabel: string;
         searching: string;
         fields: {
           email: string;
@@ -478,11 +495,20 @@ export interface Translations {
           hasOverdue: string;
           overdueDetails: string;
         };
+        warnings: {
+          userBannedTitle: string;
+          userBannedMessage: string;
+          userBannedNote: string;
+          userSuspendedTitle: string;
+          userSuspendedMessage: string;
+          userSuspendedNote: string;
+          suspensionEnds: string;
+          daysRemaining: string;
+        };
       };
       booksSection: {
         title: string;
         placeholder: string;
-        tip: string;
         detected: string;
         validating: string;
         found: string;
@@ -852,7 +878,21 @@ export const translations: Record<Language, Translations> = {
           phone: "Telefone",
           governmentId: "CPF/RG",
           governmentIdSecondary: "RG/Outro",
-          address: "Endereço"
+          address: "Endereço",
+          banned: "Banido",
+          suspensionEndDate: "Data de Fim da Suspensão"
+        },
+        status: {
+          banned: "Banido",
+          suspended: "Suspenso",
+          active: "Ativo",
+          suspendedUntil: "Suspenso até {date}",
+          daysRemaining: "({days} dias restantes)"
+        },
+        edit: {
+          bannedLabel: "Usuário Banido",
+          suspendedLabel: "Suspenso",
+          suspensionPlaceholder: "Selecione a data de fim da suspensão"
         },
         loanStats: {
           active: "ativo(s)",
@@ -940,10 +980,13 @@ export const translations: Record<Language, Translations> = {
         userSection: {
           title: "Informações do Usuário (opcional)",
           nameLabel: "Nome do Usuário *",
-          searchPlaceholder: "Digite para buscar ou adicionar novo usuário...",
-          addNew: "Adicionar \"{name}\" como novo usuário",
+          searchPlaceholder: "Digite para buscar ou realizar empréstimo para usuário temporário...",
+          addNew: "Adicionar \"{name}\" como usuário temporário para esse empréstimo",
           noUserFound: "Nenhum usuário encontrado",
           noInfo: "Sem informações",
+          statusBanned: "BANIDO",
+          statusSuspended: "SUSPENSO",
+          suspendedUntilLabel: "Suspenso até: {date}",
           searching: "Buscando...",
           fields: {
             email: "E-mail",
@@ -956,12 +999,21 @@ export const translations: Record<Language, Translations> = {
             noLoans: "Sem empréstimos",
             hasOverdue: "Atrasado",
             overdueDetails: "Vencimento: {date} ({days} dias)"
+          },
+          warnings: {
+            userBannedTitle: "USUÁRIO BANIDO",
+            userBannedMessage: "Este usuário está banido e não pode fazer empréstimos.",
+            userBannedNote: "Mesmo assim, você pode registrar o empréstimo.",
+            userSuspendedTitle: "USUÁRIO SUSPENSO",
+            userSuspendedMessage: "Mesmo assim, você pode registrar o empréstimo.",
+            userSuspendedNote: "Suspenso até {date}",
+            suspensionEnds: "Suspensão termina em {date}",
+            daysRemaining: "({days} dias restantes)"
           }
         },
         booksSection: {
           title: "Códigos dos Livros *",
           placeholder: "Digite códigos separados por vírgulas\nExemplo: EM2112, A0001, EM2113",
-          tip: "Dica: Cole códigos do Excel separados por vírgulas. Use formato curto (ex: EM2112) ou completo.",
           detected: "{count} livro(s) detectado(s)",
           validating: "Validando...",
           found: "→ {title}",
@@ -1328,7 +1380,21 @@ export const translations: Record<Language, Translations> = {
           phone: "전화번호",
           governmentId: "신분증 번호",
           governmentIdSecondary: "추가 신분증",
-          address: "주소"
+          address: "주소",
+          banned: "금지됨",
+          suspensionEndDate: "정지 종료일"
+        },
+        status: {
+          banned: "금지됨",
+          suspended: "정지됨",
+          active: "활성",
+          suspendedUntil: "{date}까지 정지됨",
+          daysRemaining: "({days}일 남음)"
+        },
+        edit: {
+          bannedLabel: "금지된 사용자",
+          suspendedLabel: "정지됨",
+          suspensionPlaceholder: "정지 종료일 선택"
         },
         loanStats: {
           active: "활성",
@@ -1416,10 +1482,13 @@ export const translations: Record<Language, Translations> = {
         userSection: {
           title: "사용자 정보 (선택 사항)",
           nameLabel: "사용자 이름 *",
-          searchPlaceholder: "검색하거나 새 사용자 추가...",
-          addNew: "\"{name}\" 새 사용자로 추가",
+          searchPlaceholder: "검색하거나 새 임시 사용자로 대출...",
+          addNew: "\"{name}\" 새 임시 사용자로 추가",
           noUserFound: "사용자를 찾을 수 없음",
           noInfo: "정보 없음",
+          statusBanned: "금지됨",
+          statusSuspended: "정지됨",
+          suspendedUntilLabel: "정지 종료일: {date}",
           searching: "검색 중...",
           fields: {
             email: "이메일",
@@ -1432,12 +1501,21 @@ export const translations: Record<Language, Translations> = {
             noLoans: "대출 없음",
             hasOverdue: "연체 중",
             overdueDetails: "반납 예정일: {date} ({days}일 연체)"
+          },
+          warnings: {
+            userBannedTitle: "금지된 사용자",
+            userBannedMessage: "이 사용자는 금지되어 대출할 수 없습니다.",
+            userBannedNote: "그래도 대출을 기록할 수 있습니다.",
+            userSuspendedTitle: "정지된 사용자",
+            userSuspendedMessage: "그래도 대출을 기록할 수 있습니다.",
+            userSuspendedNote: "{date}까지 정지됨",
+            suspensionEnds: "정지 종료일: {date}",
+            daysRemaining: "({days}일 남음)"
           }
         },
         booksSection: {
           title: "도서 코드 *",
           placeholder: "쉼표로 구분된 도서 코드 입력\n예: EM2112, A0001, EM2113",
-          tip: "팁: 쉼표로 구분된 도서 코드를 붙여넣기하세요. 예: EM2112, A0001, EM2113.",
           detected: "{count}권의 도서가 감지되었습니다.",
           validating: "검증 중...",
           found: "→ {title}",
@@ -1805,7 +1883,21 @@ export const translations: Record<Language, Translations> = {
           phone: "Phone",
           governmentId: "ID Number",
           governmentIdSecondary: "Secondary ID",
-          address: "Address"
+          address: "Address",
+          banned: "Banned",
+          suspensionEndDate: "Suspension End Date"
+        },
+        status: {
+          banned: "Banned",
+          suspended: "Suspended",
+          active: "Active",
+          suspendedUntil: "Suspended until {date}",
+          daysRemaining: "({days} days remaining)"
+        },
+        edit: {
+          bannedLabel: "Banned User",
+          suspendedLabel: "Suspended",
+          suspensionPlaceholder: "Select suspension end date"
         },
         loanStats: {
           active: "active",
@@ -1893,10 +1985,13 @@ export const translations: Record<Language, Translations> = {
         userSection: {
           title: "Borrower Information (optional)",
           nameLabel: "Borrower Name *",
-          searchPlaceholder: "Type to search or add new user...",
-          addNew: "Add \"{name}\" as new user",
+          searchPlaceholder: "Type to search or add new temporary user...",
+          addNew: "Add \"{name}\" as new temporary user",
           noUserFound: "No user found",
           noInfo: "No information",
+          statusBanned: "Banned",
+          statusSuspended: "Suspended",
+          suspendedUntilLabel: "Suspended until: {date}",
           searching: "Searching...",
           fields: {
             email: "Email",
@@ -1909,12 +2004,21 @@ export const translations: Record<Language, Translations> = {
             noLoans: "No active loans",
             hasOverdue: "Has overdue loans",
             overdueDetails: "Due: {date} ({days} days overdue)"
+          },
+          warnings: {
+            userBannedTitle: "USER IS BANNED",
+            userBannedMessage: "This user is banned and cannot borrow books.",
+            userBannedNote: "You can still record the loan.",
+            userSuspendedTitle: "USER IS SUSPENDED",
+            userSuspendedMessage: "You can still record the loan.",
+            userSuspendedNote: "Suspended until {date}",
+            suspensionEnds: "Suspension ends: {date}",
+            daysRemaining: "({days} days remaining)"
           }
         },
         booksSection: {
           title: "Book Codes *",
           placeholder: "Type comma-separated book codes\nExample: EM2112, A0001, EM2113",
-          tip: "Tip: Paste comma-separated book codes copied from Excel or any list. Use short (e.g. EM2112) or full format.",
           detected: "{count} book(s) detected",
           validating: "Validating...",
           found: "→ {title}",

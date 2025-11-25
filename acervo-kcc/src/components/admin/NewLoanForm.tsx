@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import UserSearchInput from './UserSearchInput';
 import BookCodesInput from './BookCodesInput';
 import { UserSearchResult } from '@/types/user';
-import { formatDateForInput, addDays} from '@/utils/dateUtils';
+import { formatDateForInput, addDays, daysRemainingInSuspension } from '@/utils/dateUtils';
 
 interface NewLoanFormProps {
   token: string | null;
@@ -32,15 +32,20 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Update return date when loan date changes (default +21 days)
-  useEffect(() => {
-    const loanDate = new Date(formData.loan_date);
-    const newReturnDate = addDays(loanDate, 21);
-    setFormData(prev => ({
-      ...prev,
-      return_date: formatDateForInput(newReturnDate)
-    }));
-  }, [formData.loan_date]);
+    // Update return date when loan date changes (default +21 days)
+    useEffect(() => {
+      if (formData.loan_date && formData.loan_date.length === 10) {
+        const loanDate = new Date(formData.loan_date);
+        // Check if the date is valid
+        if (!isNaN(loanDate.getTime())) {
+          const newReturnDate = addDays(loanDate, 21);
+          setFormData(prev => ({
+            ...prev,
+            return_date: formatDateForInput(newReturnDate)
+          }));
+        }
+      }
+}, [formData.loan_date]);
 
   const handleUserSelect = (user: UserSearchResult | null) => {
     setSelectedUser(user);
@@ -148,10 +153,19 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
     setSuccessMessage('');
   };
 
+  // Helper to check if user is currently suspended
+  const isUserSuspended = (user: UserSearchResult): boolean => {
+    if (!user.suspensionEndDate || user.banned) return false;
+    return new Date(user.suspensionEndDate) > new Date();
+  };
+
   // Calculate days difference for display
   const loanDate = new Date(formData.loan_date);
   const returnDate = new Date(formData.return_date);
   const daysDifference = Math.round((returnDate.getTime() - loanDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  // Check if selected user is banned or suspended
+  const userWarning = selectedUser && (selectedUser.banned || isUserSuspended(selectedUser));
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -182,6 +196,60 @@ export default function NewLoanForm({ token, onSuccess }: NewLoanFormProps) {
           {successMessage}
         </div>
       )}
+
+      {/* User Ban/Suspension Warning */}
+      {userWarning && (
+          <div className={`mb-4 p-4 rounded-lg border-2 ${
+            selectedUser.banned 
+              ? 'bg-red-50 border-red-300' 
+              : 'bg-orange-50 border-orange-300'
+          }`}>
+            <div className="flex items-start">
+              <svg className={`w-6 h-6 mr-3 flex-shrink-0 ${
+                selectedUser.banned ? 'text-red-600' : 'text-orange-600'
+              }`} fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div className="flex-1">
+                <h3 className={`text-lg font-bold mb-2 ${
+                  selectedUser.banned ? 'text-red-800' : 'text-orange-800'
+                }`}>
+                  {selectedUser.banned 
+                    ? t.admin.newLoan.userSection.warnings.userBannedTitle
+                    : t.admin.newLoan.userSection.warnings.userSuspendedTitle}
+                </h3>
+                {selectedUser.banned ? (
+                  <div className="text-red-700">
+                    <p className="font-medium mb-1">
+                      {t.admin.newLoan.userSection.warnings.userBannedMessage}
+                    </p>
+                    <p className="text-sm">
+                      {t.admin.newLoan.userSection.warnings.userBannedNote}
+                    </p>
+                  </div>
+                ) : selectedUser.suspensionEndDate && (
+                  <div className="text-orange-700">
+                    <p className="font-medium mb-1">
+                      {t.admin.newLoan.userSection.warnings.userSuspendedMessage}
+                    </p>
+                    <p className="text-sm mb-2">
+                      {t.admin.newLoan.userSection.warnings.suspensionEnds.replace(
+                        '{date}', 
+                        new Date(selectedUser.suspensionEndDate).toLocaleDateString()
+                      )}
+                    </p>
+                    <p className="text-sm">
+                      {t.admin.newLoan.userSection.warnings.daysRemaining.replace(
+                        '{days}',
+                        daysRemainingInSuspension(selectedUser.suspensionEndDate).toString()
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* User Search */}

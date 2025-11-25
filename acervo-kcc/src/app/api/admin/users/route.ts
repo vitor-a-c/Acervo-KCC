@@ -189,6 +189,8 @@ export async function POST(request: NextRequest) {
             active_loans: 0,
             total_loans: 0,
             has_overdue: false,
+            banned: false,
+            suspensionEndDate: undefined,
             createdAt: now,
             updatedAt: now
           };
@@ -243,6 +245,8 @@ export async function POST(request: NextRequest) {
       active_loans: 0,
       total_loans: 0,
       has_overdue: false,
+      banned: false,
+      suspensionEndDate: undefined,
       createdAt: now,
       updatedAt: now
     };

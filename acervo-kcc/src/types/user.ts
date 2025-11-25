@@ -22,6 +22,8 @@ export interface UserSearchResult {
     return_date: string;
     days_overdue: number;
   }[];
+  banned: boolean;
+  suspensionEndDate?: string; // ISO string format for serialization
 }
 
 export interface UserImportRow {

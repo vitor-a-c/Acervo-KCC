@@ -15,6 +15,10 @@ export interface UserDocument {
   total_loans: number;               // Lifetime loan count
   has_overdue: boolean;              // Quick flag for search warnings
   
+  // Suspension and ban system
+  banned: boolean;                   // Permanent ban - admin controlled
+  suspensionEndDate?: Date;          // When suspension ends (if set)
+  
   // Metadata
   createdAt: Date;
   updatedAt: Date;
@@ -48,7 +52,7 @@ export interface LoanDocument {
   
   // Admin notes
   notes?: string;
-  created_by?: string;               // Admin who created the loan
+  created_by?: string;
   
   // Metadata
   createdAt: Date;
@@ -58,7 +62,7 @@ export interface LoanDocument {
 // ==================== BOOK DOCUMENT ====================
 export interface BookDocument {
   _id?: string;
-  codigo: string;                    // 13-character code
+  codigo: string;                    
   posicao: string;
   titulo: string;
   autor: string;
@@ -145,4 +149,38 @@ export function shouldShowYellowWarning(loan: LoanDocument): boolean {
   
   const now = new Date();
   return loan.initial_return_date < now; // Yellow if past initial date and not extended
+}
+
+// ==================== USER STATUS HELPERS ====================
+
+/**
+ * Check if user is currently suspended
+ * A user is suspended if:
+ * - They are not banned AND
+ * - They have a suspensionEndDate AND
+ * - The suspensionEndDate is in the future
+ */
+export function isUserSuspended(user: UserDocument): boolean {
+  if (user.banned) return false; // Banned users are not "suspended"
+  if (!user.suspensionEndDate) return false;
+  
+  const now = new Date();
+  return user.suspensionEndDate > now;
+}
+
+/**
+ * Check if user can create a new loan
+ * User cannot loan if they are banned OR suspended
+ */
+export function canUserLoan(user: UserDocument): boolean {
+  return !user.banned && !isUserSuspended(user);
+}
+
+/**
+ * Get user status for display
+ */
+export function getUserStatus(user: UserDocument): 'active' | 'suspended' | 'banned' {
+  if (user.banned) return 'banned';
+  if (isUserSuspended(user)) return 'suspended';
+  return 'active';
 }

@@ -51,6 +51,28 @@ export async function PUT(
     if (updates.government_id !== undefined) updateData.government_id = updates.government_id;
     if (updates.government_id_secondary !== undefined) updateData.government_id_secondary = updates.government_id_secondary;
     if (updates.address !== undefined) updateData.address = updates.address;
+    
+    // Handle banned status
+    if (updates.banned !== undefined) {
+      updateData.banned = Boolean(updates.banned);
+      // Keep suspensionEndDate for record-keeping even when banned
+    }
+    
+    // Handle suspension end date
+    // If suspensionEndDate is null, undefined, or empty string, unset it
+    // If it's a valid date string, convert to Date
+    if (updates.suspensionEndDate !== undefined) {
+      if (updates.suspensionEndDate === null || updates.suspensionEndDate === '' || updates.suspensionEndDate === undefined) {
+        // Clear suspension by setting to undefined (which MongoDB will store as null/absent)
+        updateData.suspensionEndDate = undefined;
+      } else {
+        // Set new suspension end date
+        const date = new Date(updates.suspensionEndDate);
+        if (!isNaN(date.getTime())) {
+          updateData.suspensionEndDate = date;
+        }
+      }
+    }
 
     const result = await collection.updateOne(
       { _id: new ObjectId(id) },
